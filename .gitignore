@@ -44,3 +44,5 @@ logs/
 CLAUDE.md
 .claude/
 docs/
+
+example.py
