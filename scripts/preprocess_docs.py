@@ -1,89 +1,85 @@
 """
-Convert raw JSON doc downloads → markdown files with frontmatter.
+Convert raw markdown downloads → processed markdown files with YAML frontmatter.
 
 Usage:
     python scripts/preprocess_docs.py
 """
 
-import json
 import re
 from pathlib import Path
-
-from bs4 import BeautifulSoup
 
 RAW_DIR = Path(__file__).parent.parent / "data" / "raw_docs"
 PROCESSED_DIR = Path(__file__).parent.parent / "data" / "processed"
 
 VALID_CATEGORIES = {"webhooks", "payments", "api", "refunds", "config"}
 
+# Regex to parse the metadata comment written by download_stripe_docs.py
+META_RE = re.compile(
+    r"^<!--\s*source_url:\s*(\S+)\s+doc_category:\s*(\S+)\s*-->",
+)
 
-def html_to_markdown(html: str) -> str:
-    soup = BeautifulSoup(html, "html.parser")
-    for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
-        tag.decompose()
 
-    # Promote headings
-    for level in range(1, 7):
-        for h in soup.find_all(f"h{level}"):
-            h.replace_with(f"\n{'#' * level} {h.get_text(strip=True)}\n")
-
-    # Code blocks
-    for pre in soup.find_all("pre"):
-        code = pre.get_text()
-        pre.replace_with(f"\n```\n{code}\n```\n")
-
-    # Links
-    for a in soup.find_all("a", href=True):
-        a.replace_with(f"[{a.get_text(strip=True)}]({a['href']})")
-
-    main = soup.find("main") or soup.find("article") or soup.body
-    text = main.get_text(separator="\n") if main else soup.get_text(separator="\n")
-
-    # Collapse excessive blank lines
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
+def extract_h1(content: str) -> str:
+    """Return the first H1 heading from markdown, or empty string."""
+    for line in content.splitlines():
+        line = line.strip()
+        if line.startswith("# "):
+            return line[2:].strip()
+    return ""
 
 
 def process_file(path: Path) -> Path | None:
-    data = json.loads(path.read_text())
-    category = data.get("category", "")
-    if category not in VALID_CATEGORIES:
-        print(f"  SKIP {path.name}: unknown category '{category}'")
+    raw = path.read_text(encoding="utf-8")
+    first_line, _, body = raw.partition("\n")
+
+    match = META_RE.match(first_line.strip())
+    if not match:
+        print(f"  SKIP {path.name}: missing metadata comment")
         return None
 
-    markdown = html_to_markdown(data["html"])
-    if len(markdown) < 200:
-        print(f"  SKIP {path.name}: content too short")
+    source_url, doc_category = match.group(1), match.group(2)
+
+    if doc_category not in VALID_CATEGORIES:
+        print(f"  SKIP {path.name}: unknown category '{doc_category}'")
         return None
 
-    stem = path.stem  # e.g. "webhooks-signatures"
-    out_path = PROCESSED_DIR / f"{stem}.md"
+    body = body.strip()
+    if len(body) < 200:
+        print(f"  SKIP {path.name}: content too short ({len(body)} chars)")
+        return None
+
+    source_title = extract_h1(body) or path.stem.replace("-", " ").title()
+
+    out_path = PROCESSED_DIR / path.name
     frontmatter = (
         f"---\n"
-        f"source_url: {data['url']}\n"
-        f"source_title: {data['title']}\n"
-        f"doc_category: {category}\n"
+        f"source_url: {source_url}\n"
+        f"source_title: {source_title}\n"
+        f"doc_category: {doc_category}\n"
         f"---\n\n"
     )
-    out_path.write_text(frontmatter + markdown)
+    out_path.write_text(frontmatter + body, encoding="utf-8")
     return out_path
 
 
 def main() -> None:
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    raw_files = list(RAW_DIR.glob("*.json"))
+    raw_files = sorted(RAW_DIR.glob("*.md"))
+
     if not raw_files:
-        print(f"No JSON files found in {RAW_DIR}. Run download_stripe_docs.py first.")
+        print(f"No .md files found in {RAW_DIR}. Run download_stripe_docs.py first.")
         return
 
     saved = []
-    for path in sorted(raw_files):
+    for path in raw_files:
         result = process_file(path)
         if result:
             saved.append(result)
             print(f"  → {result.name}")
+        else:
+            print(f"  skipped {path.name}")
 
-    print(f"\nProcessed {len(saved)} files → {PROCESSED_DIR}")
+    print(f"\nProcessed {len(saved)} / {len(raw_files)} files → {PROCESSED_DIR}")
 
 
 if __name__ == "__main__":

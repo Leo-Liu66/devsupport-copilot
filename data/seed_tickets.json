@@ -1,0 +1,455 @@
+[
+  {
+    "id": "TICKET-001",
+    "subject": "Webhook endpoint returns 500 after payment_intent.succeeded event",
+    "body": "Our webhook handler started throwing 500 errors for payment_intent.succeeded events. The signature verification passes but our database update fails. Events are being retried every hour. How do we handle this without losing events?",
+    "user_email": "dev@acmecorp.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P1 - Critical",
+    "expected_action": "escalate",
+    "expected_keywords": [
+      "webhook",
+      "payment_intent.succeeded",
+      "500 error",
+      "retry"
+    ]
+  },
+  {
+    "id": "TICKET-002",
+    "subject": "Stripe-Signature header verification always fails in production",
+    "body": "We set up webhook signature verification using Stripe's Python library. In local development it works fine, but in production we always get SignatureVerificationError. We're using Flask and the endpoint_secret is correct.",
+    "user_email": "backend@startup.io",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P1 - Critical",
+    "expected_action": "escalate",
+    "expected_keywords": [
+      "webhook signature",
+      "SignatureVerificationError",
+      "Stripe-Signature",
+      "verification failed"
+    ]
+  },
+  {
+    "id": "TICKET-003",
+    "subject": "Not receiving webhook events for failed payments",
+    "body": "We subscribed to payment_intent.payment_failed events but we're not receiving them. We receive payment_intent.succeeded fine. Our endpoint URL is correct and shows as active in the Dashboard.",
+    "user_email": "payments@retailco.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "webhook events",
+      "payment_intent.payment_failed",
+      "not receiving"
+    ]
+  },
+  {
+    "id": "TICKET-004",
+    "subject": "Webhook events arriving out of order causing data inconsistencies",
+    "body": "We're processing invoice.created and invoice.paid events but sometimes invoice.paid arrives before invoice.created. This causes our order system to fail.",
+    "user_email": "eng@saasplatform.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "webhook ordering",
+      "invoice.created",
+      "invoice.paid",
+      "event order"
+    ]
+  },
+  {
+    "id": "TICKET-005",
+    "subject": "Duplicate webhook events being processed multiple times",
+    "body": "We're seeing the same webhook events processed 2-3 times. Our handler returns 200 but Stripe keeps resending. Average handler time is 8 seconds.",
+    "user_email": "support@techfirm.net",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "duplicate events",
+      "webhook retry",
+      "timeout",
+      "2xx response"
+    ]
+  },
+  {
+    "id": "TICKET-006",
+    "subject": "Webhook endpoint not receiving events after DNS migration",
+    "body": "After migrating our DNS, webhook endpoint stopped receiving events. Stripe Dashboard shows events as failed with TLS error.",
+    "user_email": "ops@digitalagency.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "TLS error",
+      "webhook delivery",
+      "DNS",
+      "SSL"
+    ]
+  },
+  {
+    "id": "TICKET-007",
+    "subject": "How to replay missed webhook events from last 24 hours",
+    "body": "We had some issues with our webhooks last week and I think we may have missed some events. Can you help us figure out what we need to do?",
+    "user_email": "developer@ecomstore.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "webhook",
+      "missed events",
+      "replay"
+    ]
+  },
+  {
+    "id": "TICKET-008",
+    "subject": "Webhook events for Connect accounts not being received",
+    "body": "We have a Connect platform and want to receive webhook events from connected accounts but only receive events from our own account.",
+    "user_email": "platform@connectapp.io",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "Connect",
+      "connected accounts",
+      "webhook events"
+    ]
+  },
+  {
+    "id": "TICKET-009",
+    "subject": "Payment failing with card_declined error but test card should succeed",
+    "body": "I'm using the test card 4242424242424242 with a future expiry but getting card_declined errors. My API key is the test secret key.",
+    "user_email": "newdev@testco.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "card_declined",
+      "test card",
+      "4242",
+      "test mode"
+    ]
+  },
+  {
+    "id": "TICKET-010",
+    "subject": "Payments failing with insufficient_funds for valid live cards",
+    "body": "Multiple customers reporting their cards are declined with insufficient_funds even though they have available credit. This started after we updated our integration.",
+    "user_email": "cto@livestore.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "insufficient_funds",
+      "card declined",
+      "live mode"
+    ]
+  },
+  {
+    "id": "TICKET-011",
+    "subject": "3D Secure authentication loop — customers cannot complete payment",
+    "body": "Customers in Europe are stuck in a 3D Secure authentication loop. Affects roughly 30% of EU customers.",
+    "user_email": "payments@euretailer.eu",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "3D Secure",
+      "SCA",
+      "authentication loop",
+      "European payments"
+    ]
+  },
+  {
+    "id": "TICKET-012",
+    "subject": "PaymentIntent stuck in requires_action state",
+    "body": "Several PaymentIntents are stuck in requires_action status for days. These are bank redirect payments. How long before these automatically expire?",
+    "user_email": "dev@subscriptionco.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "requires_action",
+      "PaymentIntent",
+      "bank redirect",
+      "expiry"
+    ]
+  },
+  {
+    "id": "TICKET-013",
+    "subject": "do_not_honor decline code on all new card payments",
+    "body": "A lot of our payments have been failing lately. It wasn't happening before. Something seems off but I'm not sure where to start.",
+    "user_email": "merchant@boutique.store",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "payment failures",
+      "decline",
+      "do_not_honor"
+    ]
+  },
+  {
+    "id": "TICKET-014",
+    "subject": "Currency mismatch error when creating PaymentIntent",
+    "body": "Getting an error: The currency requested does not match the currency of the customer. We're trying to charge a customer in GBP.",
+    "user_email": "billing@globalapp.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "currency mismatch",
+      "PaymentIntent",
+      "GBP",
+      "customer currency"
+    ]
+  },
+  {
+    "id": "TICKET-015",
+    "subject": "Payment capture failing after 7-day hold",
+    "body": "We use manual capture for hotel bookings. A customer checked in today but capture is failing. The authorization was created 8 days ago.",
+    "user_email": "reservations@hotelchain.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "manual capture",
+      "authorization",
+      "capture expiry",
+      "7 days"
+    ]
+  },
+  {
+    "id": "TICKET-016",
+    "subject": "Authentication error: No such API key",
+    "body": "Our integration suddenly stopped working with 'No such API key' error. The key is loaded from an environment variable. Live mode was working yesterday.",
+    "user_email": "devops@suddenbreak.com",
+    "expected_category": "API Authentication",
+    "expected_severity": "P1 - Critical",
+    "expected_action": "escalate",
+    "expected_keywords": [
+      "API key",
+      "authentication",
+      "No such API key",
+      "environment variable"
+    ]
+  },
+  {
+    "id": "TICKET-017",
+    "subject": "403 Forbidden when using restricted API key",
+    "body": "I created a restricted API key with read permissions on charges. When I try to list charges I get 403 Forbidden.",
+    "user_email": "analyst@datacompany.com",
+    "expected_category": "API Authentication",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "restricted API key",
+      "403 Forbidden",
+      "permissions"
+    ]
+  },
+  {
+    "id": "TICKET-018",
+    "subject": "API key works locally but fails in production Docker container",
+    "body": "Our Stripe API key works locally but fails in production Docker with authentication errors. The key is set as an environment variable.",
+    "user_email": "infra@containerapp.io",
+    "expected_category": "API Authentication",
+    "expected_severity": "P2 - High",
+    "expected_action": "escalate",
+    "expected_keywords": [
+      "API key",
+      "Docker",
+      "environment variable",
+      "production"
+    ]
+  },
+  {
+    "id": "TICKET-019",
+    "subject": "How to rotate API keys without downtime",
+    "body": "We need to rotate our production API keys due to a suspected security incident. We process thousands of payments per day and cannot have downtime.",
+    "user_email": "security@bigmerchant.com",
+    "expected_category": "API Authentication",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "API key rotation",
+      "zero downtime",
+      "live mode"
+    ]
+  },
+  {
+    "id": "TICKET-020",
+    "subject": "Live mode keys not working despite switching from test mode",
+    "body": "I switched from test to live mode but still getting authentication errors in my backend. I updated my publishable key but forgot the secret key.",
+    "user_email": "indie@freelancedev.com",
+    "expected_category": "API Authentication",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "live mode",
+      "test mode",
+      "publishable key",
+      "secret key"
+    ]
+  },
+  {
+    "id": "TICKET-021",
+    "subject": "Refund request failing — charge already disputed",
+    "body": "We're trying to refund a customer but getting: The charge you are attempting to refund has a pending dispute. Can we still refund?",
+    "user_email": "support@marketplace.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "refund",
+      "disputed charge",
+      "chargeback",
+      "pending dispute"
+    ]
+  },
+  {
+    "id": "TICKET-022",
+    "subject": "Lost dispute — what evidence should we have submitted?",
+    "body": "We lost a chargeback dispute for a $450 software subscription. Reason code was 'services not provided'. What evidence is most effective for digital goods?",
+    "user_email": "cfo@softwarevendor.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "dispute",
+      "chargeback evidence",
+      "services not provided",
+      "digital goods"
+    ]
+  },
+  {
+    "id": "TICKET-023",
+    "subject": "Partial refund showing as full refund in customer's bank",
+    "body": "A customer is saying their refund amount doesn't look right. I'm not sure exactly what happened on our end or how to check.",
+    "user_email": "accounting@retail.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "partial refund",
+      "refund amount",
+      "customer statement"
+    ]
+  },
+  {
+    "id": "TICKET-024",
+    "subject": "Dispute deadline in 2 days — how to submit evidence quickly",
+    "body": "We just noticed a dispute expiring in 2 days. We have order confirmation, delivery tracking, and email correspondence. Can we submit evidence via API?",
+    "user_email": "urgent@fastmerchant.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "dispute deadline",
+      "evidence submission",
+      "chargeback"
+    ]
+  },
+  {
+    "id": "TICKET-025",
+    "subject": "Refund processing time longer than expected",
+    "body": "One of our customers is asking about their refund. They say they haven't received it yet. What should I tell them?",
+    "user_email": "help@consumerapp.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "refund",
+      "processing time",
+      "refund status",
+      "bank credit"
+    ]
+  },
+  {
+    "id": "TICKET-026",
+    "subject": "How to add a second team member with limited access",
+    "body": "I want to add a support team member who can view disputes and issue refunds but cannot access API keys or change account settings.",
+    "user_email": "admin@smallbiz.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "team member",
+      "Dashboard access",
+      "permissions",
+      "role"
+    ]
+  },
+  {
+    "id": "TICKET-027",
+    "subject": "Account temporarily restricted — unable to process payments",
+    "body": "Our Stripe account shows it is restricted and payments are paused. We submitted verification documents 3 days ago but the restriction is still in place.",
+    "user_email": "owner@newbusiness.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P2 - High",
+    "expected_action": "escalate",
+    "expected_keywords": [
+      "account restricted",
+      "verification",
+      "payout paused"
+    ]
+  },
+  {
+    "id": "TICKET-028",
+    "subject": "Custom statement descriptor not appearing on customer statements",
+    "body": "We configured a custom statement descriptor in the Dashboard but customers still see our legal business name. We also tried setting it on individual PaymentIntents.",
+    "user_email": "billing@brandedco.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "statement descriptor",
+      "billing statement",
+      "PaymentIntent",
+      "branding"
+    ]
+  },
+  {
+    "id": "TICKET-029",
+    "subject": "Payout schedule changed unexpectedly to manual",
+    "body": "Something seems wrong with how money is moving in our account. It doesn't look the same as it used to. Can you check?",
+    "user_email": "finance@cashflowco.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "payout schedule",
+      "automatic payout",
+      "manual payout"
+    ]
+  },
+  {
+    "id": "TICKET-030",
+    "subject": "How to enable Apple Pay and Google Pay on Checkout",
+    "body": "We want to enable Apple Pay and Google Pay for our Stripe Checkout integration. They don't appear in the checkout form despite enabling them in the Dashboard.",
+    "user_email": "mobile@appstore.dev",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "Apple Pay",
+      "Google Pay",
+      "Checkout",
+      "payment methods"
+    ]
+  },
+  {
+    "id": "TICKET-031",
+    "subject": "How do I integrate Stripe with my WordPress blog?",
+    "body": "Hi, I run a personal blog on WordPress and want to accept donations. Is there a Stripe plugin for WordPress? Also do you have any recommendations for themes that work well with payment forms? Thanks",
+    "user_email": "blogger@personalsite.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "WordPress",
+      "plugin",
+      "out of scope"
+    ]
+  }
+]
