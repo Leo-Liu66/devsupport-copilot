@@ -1,4 +1,3 @@
-import numpy as np
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 
@@ -19,52 +18,25 @@ def _get_vectorstore() -> tuple[Chroma, OpenAIEmbeddings]:
     return vectorstore, embeddings
 
 
-def _cosine_similarity(a: list[float], b: list[float]) -> float:
-    a_arr = np.array(a)
-    b_arr = np.array(b)
-    norm = np.linalg.norm(a_arr) * np.linalg.norm(b_arr)
-    if norm == 0:
-        return 0.0
-    return float(np.dot(a_arr, b_arr) / norm)
-
-
-def _docs_to_chunks(docs_with_scores: list[tuple]) -> list[RetrievedChunk]:
-    chunks = []
-    for doc, score in docs_with_scores:
-        meta = doc.metadata
-        chunks.append(RetrievedChunk(
-            chunk_id=meta.get("chunk_id", ""),
-            content=doc.page_content,
-            source_url=meta.get("source_url", ""),
-            source_title=meta.get("source_title", ""),
-            doc_category=meta.get("doc_category", "general"),
-            relevance_score=float(score),
-        ))
-    return chunks
-
-
 async def retrieve(
     query: str,
     top_k: int = 5,
     doc_category: str | None = None,
 ) -> list[RetrievedChunk]:
     """
-    Semantic search over Stripe doc embeddings.
+    Cosine similarity search over Stripe doc embeddings.
 
-    Primary path (Option A): similarity_search_with_relevance_scores.
-    Gives real cosine-based scores; works correctly when the index is clean.
+    Uses similarity_search_with_relevance_scores (LangChain Chroma wrapper),
+    which returns cosine-based relevance scores in [-1, 1]. Scores below 0.3
+    indicate off-topic queries and trigger retrieval_sufficient=False in qa.py.
 
-    The ingest pipeline (Fix 2 + Fix 1) removes the root causes that
-    previously forced Option B:
-      - Fix 2: large files pre-split by H2 section → breaks up oversized docs
-      - Fix 1: chunks < 100 chars dropped → removes orphan headers/table rows
-      - Intra-doc dedup: repeated code blocks kept only once
-
-    Fallback path (Option B / MMR): activated only when Option A returns all
-    results from a single source_url, meaning the cleaned index still can't
-    provide diversity for this specific query. MMR's penalty term forces
-    results from other semantic clusters. Requires extra per-chunk embed calls
-    for post-hoc scoring.
+    Diversity (≥2 unique source_urls in results) is achieved through clean
+    ingest rather than algorithmic retrieval tricks:
+      - Large files (>50KB) pre-split by H2 section (ingest.py Fix 2)
+      - Chunks <100 chars and table separator rows dropped (ingest.py Fix 1)
+      - Intra-document exact duplicates removed (ingest.py dedup)
+    These three measures prevent any single oversized document from dominating
+    the embedding space, so cosine similarity naturally returns diverse sources.
 
     Args:
         query: natural language query
@@ -73,43 +45,21 @@ async def retrieve(
 
     Returns list of RetrievedChunk with relevance_score.
     """
-    vectorstore, embeddings = _get_vectorstore()
+    vectorstore, _ = _get_vectorstore()
     filter_dict: dict | None = {"doc_category": doc_category} if doc_category else None
 
-    # Option A: similarity search with real scores
     results = vectorstore.similarity_search_with_relevance_scores(
         query, k=top_k, filter=filter_dict
     )
-    chunks = _docs_to_chunks(results)
 
-    # Check diversity; fall back to MMR only if all results share one source
-    unique_sources = {c.source_url for c in chunks}
-    if len(chunks) < 2 or len(unique_sources) >= 2:
-        return chunks
-
-    # Option B fallback: MMR + post-hoc cosine scores
-    mmr_retriever = vectorstore.as_retriever(
-        search_type="mmr",
-        search_kwargs={
-            "k": top_k,
-            "fetch_k": 20,
-            "lambda_mult": 0.7,
-            **({"filter": filter_dict} if filter_dict else {}),
-        },
-    )
-    docs = await mmr_retriever.ainvoke(query)
-    query_emb = embeddings.embed_query(query)
-    mmr_chunks: list[RetrievedChunk] = []
-    for doc in docs:
-        doc_emb = embeddings.embed_query(doc.page_content)
-        score = _cosine_similarity(query_emb, doc_emb)
-        meta = doc.metadata
-        mmr_chunks.append(RetrievedChunk(
-            chunk_id=meta.get("chunk_id", ""),
+    return [
+        RetrievedChunk(
+            chunk_id=doc.metadata.get("chunk_id", ""),
             content=doc.page_content,
-            source_url=meta.get("source_url", ""),
-            source_title=meta.get("source_title", ""),
-            doc_category=meta.get("doc_category", "general"),
-            relevance_score=score,
-        ))
-    return mmr_chunks
+            source_url=doc.metadata.get("source_url", ""),
+            source_title=doc.metadata.get("source_title", ""),
+            doc_category=doc.metadata.get("doc_category", "general"),
+            relevance_score=float(score),
+        )
+        for doc, score in results
+    ]

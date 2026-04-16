@@ -16,9 +16,24 @@ from app.models.kb import IngestResult
 # embedding space with 400+ chunks vs single-topic docs with 10 chunks.
 LARGE_FILE_THRESHOLD_BYTES = 50_000
 
-# Chunks shorter than this are dropped: isolated headers, table fragments,
-# single-cell rows that carry no semantic content on their own.
+# Chunks shorter than this are dropped: isolated headers, single-cell rows.
 MIN_CHUNK_LEN = 100
+
+
+def _is_table_separator(chunk: str) -> bool:
+    """
+    Returns True when a chunk is primarily markdown table separator rows.
+
+    Stripe docs contain wide tables whose separator rows (| --- | --- |)
+    exceed MIN_CHUNK_LEN after splitting, so length filtering alone won't
+    catch them. A chunk is a separator if >50% of its non-empty lines
+    consist only of pipes, spaces, dashes, and colons.
+    """
+    lines = [l for l in chunk.strip().splitlines() if l.strip()]
+    if not lines:
+        return True
+    sep_lines = sum(1 for l in lines if re.match(r"^\|[\s|:\-]+\|?\s*$", l))
+    return (sep_lines / len(lines)) > 0.5
 
 splitter = RecursiveCharacterTextSplitter(
     chunk_size=1000,
@@ -83,6 +98,8 @@ def _chunk_body(body: str, filepath: str) -> list[str]:
     for section in sections:
         for chunk in splitter.split_text(section):
             if len(chunk.strip()) < MIN_CHUNK_LEN:
+                continue
+            if _is_table_separator(chunk):
                 continue
             if chunk in seen:
                 continue
