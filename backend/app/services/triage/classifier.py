@@ -28,11 +28,11 @@ Given a support ticket (subject + body), classify it into exactly one category, 
 
 - **P1 - Critical**: Production system is broken or blocked RIGHT NOW with active revenue impact or complete inability to operate. The issue is currently happening in production (not test mode), affects real customers or real payments, and has no workaround. Examples: webhook handler returning 500s on live payment events, signature verification failing on ALL production webhooks, API key suddenly invalid in live production.
 
-- **P2 - High**: A significant feature is broken or degraded in a way that impacts operations, but the system is not completely down. May affect multiple customers, have a partial workaround, or have time pressure. Examples: duplicate webhook processing, payment failures affecting a subset of customers, API key failing in one environment but not another, dispute deadline approaching, account restricted pending verification.
+- **P2 - High**: The core system or infrastructure is degraded in a way that broadly impacts operations — multiple customers affected, core payment flows broken, or the primary integration failing. The degradation is systemic, not scoped to a single configuration item. Examples: duplicate webhook processing affecting all events, payment failures affecting a subset of customers, API key failing in one environment but not another, dispute deadline approaching, account restricted pending verification. P2 requires broad impact: if the core infrastructure is operational and only a specific event subscription, permission scope, or configuration item is absent, that is P3.
 
-- **P3 - Medium**: A real problem or important question, but not time-critical and not blocking core operations. Examples: how-to questions about production workflows, configuration not working as expected, need information to diagnose further, historical issue investigation.
+- **P3 - Medium**: A real problem or important question that is not blocking core operations. This includes cases where the overall system is functioning correctly but a specific configuration, subscription, or permission scope is missing or misconfigured — the infrastructure is healthy, the issue is narrow in scope. Examples: a specific webhook event type not arriving while the endpoint and other event types work normally, a restricted API key returning 403 because a single permission scope is missing, how-to questions about production workflows, configuration not working as expected, need information to diagnose further.
 
-- **P4 - Low**: General inquiry, how-to question, feature request, or test-mode-only issue with no production impact. Examples: test card not working in test mode, understanding event ordering (informational), setting up a new feature, general integration guidance.
+- **P4 - Low**: General inquiry, how-to question, feature request, or test-mode-only issue with no production impact. Includes cases where the user is trying to enable or configure a feature that has never been part of their live integration — they are seeking guidance to set it up, not reporting a broken system. Examples: test card not working in test mode, understanding event ordering (informational), enabling a payment method or feature for the first time, general integration guidance.
 
 ## CONFIDENCE SCORING
 
@@ -53,7 +53,11 @@ Extract 3-5 keywords or short phrases that:
 - The category value MUST be exactly one of: "Webhook Issues", "Payment Failures", "API Authentication", "Refund & Disputes", "Account & Configuration"
 - The severity value MUST be exactly one of: "P1 - Critical", "P2 - High", "P3 - Medium", "P4 - Low"
 - When the ticket body is vague or lacks detail, lean toward P3 - Medium severity and lower confidence
-- Focus on what the TICKET is about, not tangential mentions. A ticket about a webhook returning 500 is "Webhook Issues" even if it mentions payments."""
+- Focus on what the TICKET is about, not tangential mentions. A ticket about a webhook returning 500 is "Webhook Issues" even if it mentions payments.
+
+## OVERRIDE RULE
+
+If the ticket explicitly mentions test mode indicators (test card numbers like 4242424242424242, "test secret key", "test mode", "sk_test_", "pk_test_"), severity MUST be P4 - Low. This overrides all other severity signals."""
 
 
 def _validate_classification(result: TicketClassification) -> TicketClassification:

@@ -87,3 +87,39 @@ async def test_vague_ticket_gets_moderate_confidence(seed_tickets):
     assert result.confidence < 0.9, (
         f"Vague ticket got unexpectedly high confidence: {result.confidence}"
     )
+
+
+async def test_p4_tickets_not_escalated(seed_tickets):
+    """All P4 tickets must not receive P1 severity.
+
+    Task 05 route_node maps P1 → escalate, P2/P3/P4 → auto_reply.
+    A misclassified P4→P1 would incorrectly escalate low-priority tickets.
+    P4 tickets classified as P2 or P3 still route correctly to auto_reply.
+    Tests all P4-labeled tickets to ensure none are falsely elevated to P1.
+    """
+    p4_tickets = [t for t in seed_tickets if t["expected_severity"] == "P4 - Low"]
+    assert len(p4_tickets) >= 4, "Expected at least 4 P4 tickets in seed data"
+
+    for ticket in p4_tickets:
+        result = await classify_ticket(ticket["subject"], ticket["body"])
+        assert result.severity != "P1 - Critical", (
+            f"{ticket['id']} ({ticket['subject']}): "
+            f"P4 ticket falsely elevated to P1 - Critical — "
+            f"route_node would incorrectly escalate this ticket"
+        )
+
+
+async def test_keywords_count_within_bounds(seed_tickets):
+    """Keywords must be 1-5 items for all tickets — prompt requests 3-5.
+
+    Task 05 retrieve_node passes keywords as retrieval query signals.
+    Exceeding 5 keywords makes the retrieval query too diffuse, lowering
+    chunk relevance scores and risking retrieval_sufficient=False.
+    Tests all 31 tickets since keyword explosion can happen on any input.
+    """
+    for ticket in seed_tickets:
+        result = await classify_ticket(ticket["subject"], ticket["body"])
+        assert 1 <= len(result.keywords) <= 5, (
+            f"{ticket['id']}: expected 1-5 keywords, got {len(result.keywords)}: "
+            f"{result.keywords}"
+        )
