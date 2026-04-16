@@ -54,13 +54,6 @@ def parse_citations(answer_text: str, chunks: list[RetrievedChunk]) -> list[Cita
     return citations
 
 
-def check_retrieval_sufficient(chunks: list[RetrievedChunk], threshold: float = 0.3) -> bool:
-    if not chunks:
-        return False
-    avg_score = sum(c.relevance_score for c in chunks) / len(chunks)
-    return avg_score >= threshold
-
-
 async def generate_cited_answer(
     query: str,
     chunks: list[RetrievedChunk],
@@ -76,7 +69,8 @@ async def generate_cited_answer(
 
     If avg relevance < 0.3 → retrieval_sufficient = False
     """
-    retrieval_sufficient = check_retrieval_sufficient(chunks)
+    avg_score = sum(c.relevance_score for c in chunks) / len(chunks) if chunks else 0.0
+    retrieval_sufficient = avg_score >= 0.3
 
     formatted_sources = format_sources(chunks)
     prompt = CITED_QA_PROMPT.format(
@@ -92,15 +86,9 @@ async def generate_cited_answer(
     response = await llm.ainvoke([HumanMessage(content=prompt)])
     answer_text = response.content
 
-    citations = parse_citations(answer_text, chunks)
-
-    avg_score = (
-        sum(c.relevance_score for c in chunks) / len(chunks) if chunks else 0.0
-    )
-
     return CitedAnswer(
         answer=answer_text,
-        citations=citations,
+        citations=parse_citations(answer_text, chunks),
         confidence=avg_score,
         retrieval_sufficient=retrieval_sufficient,
     )

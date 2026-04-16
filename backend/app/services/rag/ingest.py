@@ -1,5 +1,4 @@
 import glob
-import os
 import re
 from pathlib import Path
 
@@ -11,13 +10,15 @@ from langchain_openai import OpenAIEmbeddings
 from app.config import settings
 from app.models.kb import IngestResult
 
-# Files larger than this threshold are pre-split by H2 section before chunking.
-# Prevents oversized docs (e.g. 254KB error-handling.md) from dominating the
-# embedding space with 400+ chunks vs single-topic docs with 10 chunks.
-LARGE_FILE_THRESHOLD_BYTES = 50_000
-
-# Chunks shorter than this are dropped: isolated headers, single-cell rows.
+# Chunks shorter than this are dropped: isolated headers, single-cell rows
+# that carry no semantic content on their own.
 MIN_CHUNK_LEN = 100
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=200,
+    separators=["\n## ", "\n### ", "\n\n", "\n", " "],
+)
 
 
 def _is_table_separator(chunk: str) -> bool:
@@ -34,12 +35,6 @@ def _is_table_separator(chunk: str) -> bool:
         return True
     sep_lines = sum(1 for l in lines if re.match(r"^\|[\s|:\-]+\|?\s*$", l))
     return (sep_lines / len(lines)) > 0.5
-
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk_overlap=200,
-    separators=["\n## ", "\n### ", "\n\n", "\n", " "],
-)
 
 
 def load_document(filepath: str) -> tuple[dict, str]:
@@ -58,56 +53,6 @@ def make_doc_slug(filepath: str) -> str:
     return Path(filepath).stem
 
 
-def _split_into_sections(body: str) -> list[str]:
-    """
-    Pre-split a large document body into H2-level sections.
-
-    Uses lookahead so each section retains its own ## header. Keeps the
-    preamble (content before the first ## ) as its own section.
-    """
-    sections = re.split(r"(?=\n## )", body)
-    return [s for s in sections if s.strip()]
-
-
-def _chunk_body(body: str, filepath: str) -> list[str]:
-    """
-    Chunk a document body, applying pre-splitting for large files.
-
-    Fix 2 (pre-split): Large files are split by H2 section first so the
-    splitter operates on topically coherent pieces, preventing a single
-    section header from becoming its own orphan chunk.
-
-    Fix 1 (min-length filter): Chunks shorter than MIN_CHUNK_LEN are dropped
-    (isolated headers, table fragments, single-pipe rows).
-
-    Fix 3 (MMR): Applied in retriever.py only as a fallback if the cleaned
-    index still produces non-diverse similarity results for a given query.
-
-    Intra-document dedup: exact-duplicate chunks within the same file are
-    kept only once (handles repeated multi-language code blocks in Stripe docs).
-    """
-    file_size = os.path.getsize(filepath)
-
-    if file_size > LARGE_FILE_THRESHOLD_BYTES:
-        sections = _split_into_sections(body)
-    else:
-        sections = [body]
-
-    seen: set[str] = set()
-    result: list[str] = []
-    for section in sections:
-        for chunk in splitter.split_text(section):
-            if len(chunk.strip()) < MIN_CHUNK_LEN:
-                continue
-            if _is_table_separator(chunk):
-                continue
-            if chunk in seen:
-                continue
-            seen.add(chunk)
-            result.append(chunk)
-    return result
-
-
 async def ingest_documents(doc_dir: str) -> IngestResult:
     """
     Load Stripe markdown docs from doc_dir, chunk, embed, store in ChromaDB.
@@ -115,7 +60,8 @@ async def ingest_documents(doc_dir: str) -> IngestResult:
     Steps:
     1. List all .md files in doc_dir
     2. For each file: parse frontmatter → extract metadata + body
-    3. Chunk body: pre-split large files by H2, filter short chunks, dedup
+    3. Chunk body with RecursiveCharacterTextSplitter, filtering out
+       short chunks (<100 chars) and table separator rows
     4. Assign chunk_id: f"{doc_slug}-chunk-{index:03d}"
     5. Store chunks + metadata in ChromaDB (clear collection first)
 
@@ -154,9 +100,13 @@ async def ingest_documents(doc_dir: str) -> IngestResult:
             continue
 
         doc_slug = make_doc_slug(filepath)
-        chunks = _chunk_body(body, filepath)
-
-        for idx, chunk_text in enumerate(chunks):
+        raw_chunks = splitter.split_text(body)
+        idx = 0
+        for chunk_text in raw_chunks:
+            if len(chunk_text.strip()) < MIN_CHUNK_LEN:
+                continue
+            if _is_table_separator(chunk_text):
+                continue
             chunk_id = f"{doc_slug}-chunk-{idx:03d}"
             all_texts.append(chunk_text)
             all_metadatas.append({
@@ -166,6 +116,7 @@ async def ingest_documents(doc_dir: str) -> IngestResult:
                 "doc_category": metadata["doc_category"],
             })
             all_ids.append(chunk_id)
+            idx += 1
 
         num_docs += 1
 
