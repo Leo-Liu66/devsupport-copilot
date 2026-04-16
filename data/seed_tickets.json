@@ -35,7 +35,7 @@
     "body": "We subscribed to payment_intent.payment_failed events but we're not receiving them. We receive payment_intent.succeeded fine. Our endpoint URL is correct and shows as active in the Dashboard.",
     "user_email": "payments@retailco.com",
     "expected_category": "Webhook Issues",
-    "expected_severity": "P3 - Medium",
+    "expected_severity": "P4 - Low",
     "expected_action": "auto_reply",
     "expected_keywords": [
       "webhook events",
