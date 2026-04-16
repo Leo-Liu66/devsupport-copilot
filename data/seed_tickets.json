@@ -35,7 +35,7 @@
     "body": "We subscribed to payment_intent.payment_failed events but we're not receiving them. We receive payment_intent.succeeded fine. Our endpoint URL is correct and shows as active in the Dashboard.",
     "user_email": "payments@retailco.com",
     "expected_category": "Webhook Issues",
-    "expected_severity": "P4 - Low",
+    "expected_severity": "P3 - Medium",
     "expected_action": "auto_reply",
     "expected_keywords": [
       "webhook events",
@@ -254,8 +254,8 @@
     "body": "Our Stripe API key works locally but fails in production Docker with authentication errors. The key is set as an environment variable.",
     "user_email": "infra@containerapp.io",
     "expected_category": "API Authentication",
-    "expected_severity": "P4 - Low",
-    "expected_action": "escalate",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
     "expected_keywords": [
       "API key",
       "Docker",
@@ -436,6 +436,20 @@
       "Google Pay",
       "Checkout",
       "payment methods"
+    ]
+  },
+  {
+    "id": "TICKET-031",
+    "subject": "How do I integrate Stripe with my WordPress blog?",
+    "body": "Hi, I run a personal blog on WordPress and want to accept donations. Is there a Stripe plugin for WordPress? Also do you have any recommendations for themes that work well with payment forms? Thanks",
+    "user_email": "blogger@personalsite.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "WordPress",
+      "plugin",
+      "out of scope"
     ]
   }
 ]
