@@ -1,5 +1,11 @@
 from pydantic import BaseModel
 
+
+class IngestResult(BaseModel):
+    num_docs: int
+    num_chunks: int
+    collection_name: str
+
 class RetrievedChunk(BaseModel):
     chunk_id: str          # e.g. "stripe-webhooks-overview-chunk-003"
     content: str
