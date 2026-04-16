@@ -5,8 +5,8 @@
     "body": "Our webhook handler started throwing 500 errors for payment_intent.succeeded events. The signature verification passes but our database update fails. Events are being retried every hour. How do we handle this without losing events?",
     "user_email": "dev@acmecorp.com",
     "expected_category": "Webhook Issues",
-    "expected_severity": "P1 - Critical",
-    "expected_action": "escalate",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
     "expected_keywords": [
       "webhook",
       "payment_intent.succeeded",
