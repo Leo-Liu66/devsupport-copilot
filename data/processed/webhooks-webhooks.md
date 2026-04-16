@@ -70,64 +70,6 @@ This code snippet is a webhook function configured to check for received events 
 
 When you create a snapshot event handler, use the API object definition at the time of the event for your logic by accessing the event’s `data.object` fields. You can also retrieve the API resource from the Stripe API to access the latest and up-to-date object definition.
 
-#### Ruby
-
-```ruby
-require 'json'
-
-# Replace this endpoint secret with your unique endpoint secret key
-# If you're testing with the CLI, run 'stripe listen' to find the secret key
-# If you defined your endpoint using the API or the Dashboard, check your webhook settings for your endpoint secret: https://dashboard.stripe.com/webhooks
-endpoint_secret = 'whsec_...';
-
-# Using Sinatra
-post '/webhook' do
-  payload = request.body.read
-  event = nil
-
-  begin
-    event = Stripe::Event.construct_from(
-      JSON.parse(payload, symbolize_names: true)
-    )
-  rescue JSON::ParserError => e
-    # Invalid payload
-    status 400
-    return
-  end
-
-  # Check that you have configured webhook signing
-  if endpoint_secret
-    # Retrieve the event by verifying the signature using the raw body and the endpoint secret
-    signature = request.env['HTTP_STRIPE_SIGNATURE'];
-    begin
-      event = Stripe::Webhook.construct_event(
-        payload, signature, endpoint_secret
-      )
-    rescue Stripe::SignatureVerificationError => e
-      puts "⚠️  Webhook signature verification failed. #{e.message}"
-      status 400
-    end
-  end
-
-  # Handle the event
-  case event.type
-  when 'payment_intent.succeeded'
-    payment_intent = event.data.object # contains a Stripe::PaymentIntent
-    # Then define and call a method to handle the successful payment intent.
-    # handle_payment_intent_succeeded(payment_intent)
-  when 'payment_method.attached'
-    payment_method = event.data.object # contains a Stripe::PaymentMethod
-    # Then define and call a method to handle the successful attachment of a PaymentMethod.
-    # handle_payment_method_attached(payment_method)
-  # ... handle other event types
-  else
-    puts "Unhandled event type: #{event.type}"
-  end
-
-  status 200
-end
-```
-
 #### Thin event handler (Clover+)
 
 When you create a thin event handler, use the `fetchRelatedObject()` method to retrieve the latest version of the object associated with the event. Events might contain [additional data](https://docs.stripe.com/event-destinations.md#fetch-data) that you can only retrieve through the `.fetchEvent()` instance method on `EventNotification`. The exact shape of that data depends on the `type` of the Event.
@@ -269,86 +211,6 @@ if __name__ == '__main__':
 #### Snapshot events
 
 This code snippet is a webhook function configured to check for received events, detect the originating account if applicable, handle the event, and return a `200` response.
-
-#### Ruby
-
-```ruby
-require 'json'
-
-# Using Sinatra
-post '/webhook' do
-  payload = request.body.read
-  event = nil
-
-  begin
-    event = Stripe::Event.construct_from(
-      JSON.parse(payload, symbolize_names: true)
-    )
-  rescue JSON::ParserError => e
-    # Invalid payload
-    status 400
-    return
-  end
-
-  # Extract the context
-  context = event.context
-
-  # Define your API key variables (ideally loaded securely)
-  ACCOUNT_123_API_KEY = "sk_test_123"
-  ACCOUNT_456_API_KEY = "sk_test_456"
-
-  account_api_keys = {
-    "account_123" => ACCOUNT_123_API_KEY,
-    "account_456" => ACCOUNT_456_API_KEY
-  }
-
-  api_key = account_api_keys[context]
-
-  if api_key.nil?
-    puts "No API key found for context: #{context}"
-    status 400
-    return
-  end
-
-  # Handle the event
-  case event.type
-  when 'customer.created'
-    customer = event.data.object
-
-    begin
-      latest_customer = Stripe::Customer.retrieve(
-        customer.id,
-        { api_key: api_key }
-      )
-      handle_customer_created(latest_customer, context)
-    rescue => e
-      puts "Error retrieving customer: #{e.message}"
-      status 500
-      return
-    end
-
-  when 'payment_method.attached'
-    payment_method = event.data.object
-
-    begin
-      latest_payment_method = Stripe::PaymentMethod.retrieve(
-        payment_method.id,
-        { api_key: api_key }
-      )
-      handle_payment_method_attached(latest_payment_method, context)
-    rescue => e
-      puts "Error retrieving payment method: #{e.message}"
-      status 500
-      return
-    end
-
-  else
-    puts "Unhandled event type: #{event.type}"
-  end
-
-  status 200
-end
-```
 
 #### Thin event handler (Clover+)
 
@@ -579,7 +441,7 @@ If you’ve created a [Connect application](https://docs.stripe.com/connect.md) 
 
 ```curl
 curl -X POST https://api.stripe.com/v2/core/event_destinations \
-  -H "Authorization: Bearer <<YOUR_SECRET_KEY>>" \
+  -H "Authorization: Bearer [YOUR_VALUE]" \
   -H "Stripe-Version: 2026-03-25.preview" \
   --json '{
     "name": "My event destination",
@@ -612,60 +474,6 @@ We recommend using our official libraries to verify signatures. You perform the 
 If you get a signature verification error, read our guide about [troubleshooting it](https://docs.stripe.com/webhooks/signature.md).
 
 > Stripe requires the raw body of the request to perform signature verification. If you’re using a framework, make sure it doesn’t manipulate the raw body. Any manipulation to the raw body of the request causes the verification to fail.
-
-#### Ruby
-
-```ruby
-
-# Don't put any keys in code. See https://docs.stripe.com/keys-best-practices.
-# Find your keys at https://dashboard.stripe.com/apikeys.
-Stripe.api_key = '<<YOUR_SECRET_KEY>>'
-
-require 'stripe'
-require 'sinatra'
-
-# If you are testing your webhook locally with the Stripe CLI you
-# can find the endpoint's secret by running `stripe listen`
-# Otherwise, find your endpoint's secret in your webhook settings in
-# the Developer Dashboardendpoint_secret = 'whsec_...'
-
-# Using the Sinatra framework
-set :port, 4242
-
-post '/my/webhook/url' do
-  payload = request.body.readsig_header = request.env['HTTP_STRIPE_SIGNATURE']
-  event = nil
-
-  beginevent = Stripe::Webhook.construct_event(
-      payload, sig_header, endpoint_secret
-    )
-  rescue JSON::ParserError => e
-    # Invalid payload
-    puts "Error parsing payload: #{e.message}"
-    status 400
-    return
-  rescue Stripe::SignatureVerificationError => e# Invalid signature
-    puts "Error verifying webhook signature: #{e.message}"
-    status 400
-    return
-  end
-
-  # Handle the event
-  case event.type
-  when 'payment_intent.succeeded'
-    payment_intent = event.data.object # contains a Stripe::PaymentIntent
-    puts 'PaymentIntent was successful!'
-  when 'payment_method.attached'
-    payment_method = event.data.object # contains a Stripe::PaymentMethod
-    puts 'PaymentMethod was attached to a Customer!'
-  # ... handle other event types
-  else
-    puts "Unhandled event type: #{event.type}"
-  end
-
-  status 200
-end
-```
 
 #### Verify manually
 
@@ -774,95 +582,6 @@ Make sure that your event destination isn’t dependent on receiving events in a
 ### API versioning
 
 The API version in your account settings when the event occurs dictates the API version, and therefore the structure of an [Event](https://docs.stripe.com/api/events.md) sent to your destination. For example, if your account is set to an older API version, such as 2015-02-16, and you change the API version for a specific request with [versioning](https://docs.stripe.com/api.md#versioning), the [Event](https://docs.stripe.com/api/events.md) object generated and sent to your destination is still based on the 2015-02-16 API version. You can’t change [Event](https://docs.stripe.com/api/events.md) objects after creation. For example, if you update a charge, the original charge event remains unchanged. As a result, subsequent updates to your account’s API version don’t retroactively alter existing [Event](https://docs.stripe.com/api/events.md) objects. Retrieving an older [Event](https://docs.stripe.com/api/events.md) by calling `/v1/events` using a newer API version also has no impact on the structure of the received event. You can set test event destinations to either your default API version or the latest API version. The [Event](https://docs.stripe.com/api/events.md) sent to the destination is structured for the event destination’s specified version.
-
-## Best practices for using webhooks 
-
-Review these best practices to make sure your webhook endpoints remain secure and function well with your integration.
-
-### Handle duplicate events
-
-Webhook endpoints might occasionally receive the same event more than once. You can guard against duplicated event receipts by logging the [event IDs](https://docs.stripe.com/api/events/object.md#event_object-id) you’ve processed, and then not processing already-logged events.
-
-In some cases, two separate Event objects are generated and sent. To identify these duplicates, use the ID of the object in `data.object` along with the `event.type`.
-
-### Only listen to event types your integration requires
-
-Configure your webhook endpoints to receive only the types of events required by your integration. Listening for extra events (or all events) puts undue strain on your server and we don’t recommend it.
-
-You can [change the events](https://docs.stripe.com/api/webhook_endpoints/update.md#update_webhook_endpoint-enabled_events) that a webhook endpoint receives in the Dashboard or with the API.
-
-### Handle events asynchronously
-
-Configure your handler to process incoming events with an asynchronous queue. You might encounter scalability issues if you choose to process events synchronously. Any large spike in webhook deliveries (for example, during the beginning of the month when all subscriptions renew) might overwhelm your endpoint hosts.
-
-Asynchronous queues allow you to process the concurrent events at a rate your system can support.
-
-### Exempt webhook route from CSRF protection 
-
-If you’re using Rails, Django, or another web framework, your site might automatically check that every POST request contains a *CSRF token*. This is an important security feature that helps protect you and your users from [cross-site request forgery](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_\(CSRF\)) attempts. However, this security measure might also prevent your site from processing legitimate events. If so, you might need to exempt the webhooks route from CSRF protection.
-
-#### Rails
-
-```ruby
-class StripeController < ApplicationController
-  # If your controller accepts requests other than Stripe webhooks,
-  # you'll probably want to use `protect_from_forgery` to add CSRF
-  # protection for your application. But don't forget to exempt
-  # your webhook route!
-  protect_from_forgery except: :webhook
-
-  def webhook
-    # Process webhook data in `params`
-  end
-end
-```
-
-### Receive events with an HTTPS server
-
-If you use an HTTPS URL for your webhook endpoint (required in live mode), Stripe validates that the connection to your server is secure before sending your webhook data. For this to work, your server must be correctly configured to support HTTPS with a valid server certificate. Stripe webhooks support only *TLS* (TLS refers to the process of securely transmitting data between the client—the app or browser that your customer is using—and your server. This was originally performed using the SSL (Secure Sockets Layer) protocol) versions v1.2 and v1.3.
-
-### Roll endpoint signing secrets periodically 
-
-The secret used for verifying that events come from Stripe is modifiable in the **Webhooks** tab in Workbench. To keep them safe, we recommend that you roll (change) secrets periodically, or when you suspect a compromised secret.
-
-To roll a secret:
-
-1. Click each endpoint in the Workbench **Webhooks** tab that you want to roll the secret for.
-1. Navigate to the overflow menu (⋯) and click **Roll secret**. You can choose to immediately expire the current secret or delay its expiration for up to 24 hours to allow yourself time to update the verification code on your server. During this time, multiple secrets are active for the endpoint. Stripe generates one signature per secret until expiration.
-
-### Verify events are sent from Stripe 
-
-Without verification, an attacker could send fake webhook events to your endpoint to trigger actions like fulfilling orders, granting account access, or modifying records. Always verify that webhook events originate from Stripe before acting on them.
-
-Use both of these protections:
-
-- **IP allowlisting**: Stripe sends webhook events from a set list of [IP addresses](https://docs.stripe.com/ips.md). Configure your server or firewall to only accept webhook requests from these addresses.
-- **Signature verification**: Stripe signs every webhook event by including a signature in the `Stripe-Signature` header. Verify this signature using our [official libraries](https://docs.stripe.com/webhooks.md#verify-official-libraries) or [manually](https://docs.stripe.com/webhooks.md#verify-manually) to confirm the event wasn’t sent or modified by a third party.
-
-The following section describes how to verify webhook signatures:
-
-1. Retrieve your endpoint’s secret.
-1. Verify the signature.
-
-#### Retrieving your endpoint’s secret 
-
-Use Workbench and go to the **Webhooks** tab to view all your endpoints. Select an endpoint that you want to obtain the secret for, then click **Click to reveal**.
-
-Stripe generates a unique secret key for each endpoint. If you use the same endpoint for both [test and live API keys](https://docs.stripe.com/keys.md#test-live-modes), the secret is different for each one. Additionally, if you use multiple endpoints, you must obtain a secret for each one you want to verify signatures on. After this setup, Stripe starts to sign each webhook it sends to the endpoint.
-
-### Preventing replay attacks 
-
-A [replay attack](https://en.wikipedia.org/wiki/Replay_attack) is when an attacker intercepts a valid payload and its signature, then re-transmits them. To mitigate such attacks, Stripe includes a timestamp in the `Stripe-Signature` header. Because this timestamp is part of the signed payload, it’s also verified by the signature, so an attacker can’t change the timestamp without invalidating the signature. If the signature is valid but the timestamp is too old, you can have your application reject the payload.
-
-Our libraries have a default tolerance of 5 minutes between the timestamp and the current time. You can change this tolerance by providing an additional parameter when verifying signatures. Use Network Time Protocol ([NTP](https://en.wikipedia.org/wiki/Network_Time_Protocol)) to make sure that your server’s clock is accurate and synchronizes with the time on Stripe’s servers.
-
-> Don’t use a tolerance value of `0`. Using a tolerance value of `0` disables the recency check entirely.
-
-Stripe generates the timestamp and signature each time we send an event to your endpoint. If Stripe retries an event (for example, your endpoint previously replied with a non-`2xx` status code), then we generate a new signature and timestamp for the new delivery attempt.
-
-### Quickly return a 2xx response 
-
-Your [endpoint](https://docs.stripe.com/webhooks.md#example-endpoint) must quickly return a successful status code (`2xx`) prior to any complex logic that could cause a timeout. For example, you must return a `200` response before updating a customer’s invoice as paid in your accounting system.
 
 ## See also
 

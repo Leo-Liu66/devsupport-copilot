@@ -58,5 +58,5 @@ If your integration relies on receiving webhooks for the `payment_intent.require
 
 ```curl
 curl https://api.stripe.com/v1/payment_intents/pi_1QA8PKDTvO5jCVb3TVDZP75a \
-  -u "<<YOUR_SECRET_KEY>>:"
+  -u "[YOUR_VALUE]:"
 ```

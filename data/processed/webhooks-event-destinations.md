@@ -186,21 +186,6 @@ The following table details the additional data available in the complete [event
 
 The following example demonstrates how to retrieve the related object definition and additional event payload fields associated when processing a thin event notification:
 
-#### Java
-
-```java
-com.stripe.model.EventNotification eventNotification = client.parseEventNotification(payload, signatureHeader, endpointSecret);
-com.stripe.model.v2.Event event = client.v2().core().events().retrieve(eventNotification.getId());
-if (event instanceof V1BillingMeterErrorReportTriggeredEvent) {
-  V1BillingMeterErrorReportTriggeredEvent postedEvent = (V1BillingMeterErrorReportTriggeredEvent) event;
-  // On each type of event, the Stripe library provides a "fetchRelatedObject" method
-  // that performs a network request to Stripe to fetch the latest version
-  // of the object directly associated with the event, in this case, an
-  // "Meter" object.
-  Meter op = postedEvent.fetchRelatedObject();
-}
-```
-
 ### SDK typing
 
 Thin events and their notifications are fully typed in the SDKs.

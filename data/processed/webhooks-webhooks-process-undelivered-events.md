@@ -24,7 +24,7 @@ Stripe only returns events created in the last 30 days.
 
 ```curl
 curl -G https://api.stripe.com/v1/events \
-  -u "<<YOUR_SECRET_KEY>>:" \
+  -u "[YOUR_VALUE]:" \
   -d ending_before=evt_001 \
   -d "types[]=payment_intent.succeeded" \
   -d "types[]=payment_intent.payment_failed" \
@@ -32,21 +32,6 @@ curl -G https://api.stripe.com/v1/events \
 ```
 
 By default, the response returns up to 10 events. To retrieve all events, use [auto-pagination](https://docs.stripe.com/api/pagination/auto.md) after retrieving the results.
-
-#### Ruby
-
-```ruby
-events = Stripe::Event.list({
-  ending_before: 'evt_001',
-  types: ['payment_intent.succeeded', 'payment_intent.payment_failed'],
-  delivery_success: false,
-})
-
-events.auto_paging_each do |event|
-  # This function is defined in the next section
-  process_event(event)
-end
-```
 
 Using `ending_before` with auto-pagination returns events in chronological order. This lets you process events in their created order.
 
@@ -56,24 +41,6 @@ Process only unsuccessfully processed events according to your own logic to avoi
 
 - Inadvertently running the script twice in a row
 - Simultaneously running the script while Stripe  automatically resends some of the unprocessed events
-
-#### Ruby
-
-```ruby
-def process_event(event)
-  if is_processing_or_processed(event)
-    puts "skipping event #{event.id}"
-  else
-    puts "processing event #{event.id}"
-    mark_as_processing(event)
-
-    # Process the event
-    # ...
-
-    mark_as_processed(event)
-  end
-end
-```
 
 Define the following functions that prevent processing duplication:
 
@@ -87,38 +54,3 @@ Stripe still considers your manually processed events as undelivered and continu
 
 When your webhook endpoint receives an already processed event, ignore the event and return a successful response to stop future retries.
 
-#### Ruby
-
-```ruby
-require 'json'
-
-# Using Sinatra
-post '/webhook' do
-  payload = request.body.read
-  event = nil
-
-  begin
-    event = Stripe::Event.construct_from(
-      JSON.parse(payload, symbolize_names: true)
-    )
-  rescue JSON::ParserError => e
-    # Invalid payload
-    status 400
-    return
-  end
-
-  if is_processing_or_processed(event)
-    puts "skipping event #{event.id}"
-  else
-    puts "processing event #{event.id}"
-    mark_as_processing(event)
-
-    # Process the event
-    # ...
-
-    mark_as_processed(event)
-  end
-
-  status 200
-end
-```

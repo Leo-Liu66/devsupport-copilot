@@ -23,37 +23,6 @@ You can also test non-card payments in a sandbox. Non-card payments are payment 
 
 Don’t use testing environments to load test your integration because you might hit [rate limits](https://docs.stripe.com/testing.md#rate-limits). To load test your integration, see [load testing](https://docs.stripe.com/rate-limits.md#load-testing).
 
-## How to use test cards 
-
-When you work with a test card, use [test API keys](https://docs.stripe.com/keys.md#obtain-api-keys) in all API calls. This is true whether you’re serving a payment form to test interactively or writing test code.
-
-> #### Don't use real card details
-> 
-> Don’t use real card details. The [Stripe Services Agreement](https://stripe.com/legal/ssa#1-your-stripe-account) prohibits testing in live mode using real payment method details. Use your test API keys and the card numbers below.
-
-### Testing interactively
-
-When testing interactively, use a card number, such as [4242 4242 4242 4242](https://docs.stripe.com/testing.md?testing-method=card-numbers#visa). Enter the card number in the Dashboard or in any payment form.
-
-- Use a valid future date, such as **12/34**.
-- Use any three-digit CVC (four digits for American Express cards).
-- Use any value you like for other form fields.
-
-### Test code
-
-When writing test code, use a `PaymentMethod` such as [pm_card_visa](https://docs.stripe.com/testing.md?testing-method=payment-methods#visa) instead of a card number. We don’t recommend using card numbers directly in API calls or server-side code, even in testing environments. If you do use them, your code might not be PCI-compliant when you go live. By default, a `PaymentMethod` isn’t attached to a *Customer* (Customer objects represent customers of your business. They let you reuse payment methods and give you the ability to track multiple payments).
-
-```curl
-curl https://api.stripe.com/v1/payment_intents \
-  -u "<<YOUR_SECRET_KEY>>:" \
-  -d amount=500 \
-  -d currency=gbp \
-  -d payment_method=pm_card_visa \
-  -d "payment_method_types[]=card"
-```
-
-When you’re ready to take your integration live, replace your test publishable and secret [API keys](https://docs.stripe.com/keys.md) with live ones. You can’t process live payments if your integration is still using your test API keys. Store live secret keys in a secrets vault or environment variables. Don’t store keys in source code or configuration files checked into version control. To learn how to use live keys safely, see [Best practices for managing secret API keys](https://docs.stripe.com/keys-best-practices.md).
-
 ## Simulate a payment by card brand 
 
 To simulate a successful payment for a specific card brand, use test cards from the following list.
@@ -1241,19 +1210,6 @@ You can create sandbox accounts for Link using any valid email address. The foll
 ### Multiple funding sources
 
 As Stripe adds additional funding source support, you don’t need to update your integration. Stripe automatically supports them with the same transaction settlement time and guarantees as card and bank account payments.
-
-## Test a redirect-based flow 
-
-To test your integration’s redirect-handling logic by simulating a payment that uses a redirect flow (for example, iDEAL), use a supported payment method that [requires redirects](https://docs.stripe.com/payments/payment-methods/payment-method-support.md#additional-api-supportability).
-
-To create a test `PaymentIntent` that either succeeds or fails:
-
-1. Go to the [payment methods settings in the Dashboard](https://dashboard.stripe.com/settings/payment_methods) and enable a supported payment method by clicking **Turn on** in your testing environment.
-1. Collect payment details.
-1. Submit the payment to Stripe.
-1. Authorize or fail the test payment.
-
-Make sure that the page (corresponding to `return_url`) on your website provides the status of the payment.
 
 ## See also
 

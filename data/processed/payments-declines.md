@@ -80,7 +80,7 @@ In the API, you might see an invalid API call like the following:
 
 ```curl
 curl https://api.stripe.com/v1/payment_intents \
-  -u "<<YOUR_SECRET_KEY>>:" \
+  -u "[YOUR_VALUE]:" \
   -d amount=2000 \
   -d currency=usd \
   -d payment_method=pm_card_chargeDeclinedIncorrectCvc \

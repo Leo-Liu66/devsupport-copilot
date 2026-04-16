@@ -40,7 +40,7 @@ To change a customer’s default payment method for invoices and subscriptions, 
 
 ```curl
 curl https://api.stripe.com/v1/customers/cus_V9T7vofUbZMqpv \
-  -u "<<YOUR_SECRET_KEY>>:" \
+  -u "[YOUR_VALUE]:" \
   -d "invoice_settings[default_payment_method]=pm_1Msy7wLkdIwHu7ixsxmFvcz7"
 ```
 

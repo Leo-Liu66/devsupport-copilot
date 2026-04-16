@@ -51,7 +51,7 @@ When you use a PaymentIntent to collect payment, Stripe creates a [charge](https
 
 ```curl
 curl https://api.stripe.com/v1/refunds \
-  -u "<<YOUR_SECRET_KEY>>:" \
+  -u "[YOUR_VALUE]:" \
   -d payment_intent=pi_Aabcxyz01aDfoo
 ```
 
@@ -59,7 +59,7 @@ You can also refund only part of a PaymentIntent by specifying an amount. To do 
 
 ```curl
 curl https://api.stripe.com/v1/refunds \
-  -u "<<YOUR_SECRET_KEY>>:" \
+  -u "[YOUR_VALUE]:" \
   -d payment_intent=pi_Aabcxyz01aDfoo \
   -d amount=1000
 ```
@@ -237,7 +237,7 @@ If you no longer intend to collect a payment, you can [cancel a PaymentIntent](h
 
 ```curl
 curl -X POST https://api.stripe.com/v1/payment_intents/pi_32AkjQ5H4Bas2eAolX13/cancel \
-  -u "<<YOUR_SECRET_KEY>>:"
+  -u "[YOUR_VALUE]:"
 ```
 
 You can only cancel a PaymentIntent when it has one of the following statuses:

@@ -44,12 +44,6 @@ This class of errors is where the value of idempotency keys and request retries 
 
 Most client libraries can generate idempotency keys and retry requests automatically, but need to be configured to do so. They perform their first retry quickly after the first failure, and subsequent retries on an exponential backoff schedule, the assumption being that a single failure is often a random occurrence, but a pattern of repeated failures likely represents a chronic problem.
 
-#### Ruby
-
-```ruby
-Stripe.max_network_retries = 2
-```
-
 ### Server errors 
 
 Server errors result from a problem with Stripe’s servers. They return an HTTP response with a `5xx` error code. These errors are the most difficult to handle and we work to make them as rare as possible, but a good integration handles them when they do arise.

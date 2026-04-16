@@ -94,70 +94,6 @@ stripe listen --forward-to localhost:4242/webhook.php
 ~~~
 stripe listen --forward-to localhost:4242/webhook
 ~~~
-### Install the Stripe Node library
-
-Install the package and import it in your code. Alternatively, if you’re starting from scratch and need a package.json file, download the project files using the Download link in the code editor.
-
-#### npm
-
-Install the library:
-
-```bash
-npm install --save stripe
-```
-
-#### GitHub
-
-Or download the stripe-node library source code directly [from GitHub](https://github.com/stripe/stripe-node).
-
-### Install the Stripe Ruby library
-
-Install the Stripe ruby gem and require it in your code. Alternatively, if you’re starting from scratch and need a Gemfile, download the project files using the link in the code editor.
-
-#### Terminal
-
-Install the gem:
-
-```bash
-gem install stripe
-```
-
-#### Bundler
-
-Add this line to your Gemfile:
-
-```bash
-gem 'stripe'
-```
-
-#### GitHub
-
-Or download the stripe-ruby gem source code directly [from GitHub](https://github.com/stripe/stripe-ruby).
-
-### Install the Stripe Java library
-
-Add the dependency to your build and import the library. Alternatively, if you’re starting from scratch and need a sample pom.xml file (for Maven), download the project files using the link in the code editor.
-
-#### Maven
-
-Add the following dependency to your POM and replace {VERSION} with the version number you want to use.
-
-```bash
-<dependency>\n<groupId>com.stripe</groupId>\n<artifactId>stripe-java</artifactId>\n<version>{VERSION}</version>\n</dependency>
-```
-
-#### Gradle
-
-Add the dependency to your build.gradle file and replace {VERSION} with the version number you want to use.
-
-```bash
-implementation "com.stripe:stripe-java:{VERSION}"
-```
-
-#### GitHub
-
-Download the JAR directly [from GitHub](https://github.com/stripe/stripe-java/releases/latest).
-
 ### Install the Stripe Python package
 
 Install the Stripe package and import it in your code. Alternatively, if you’re starting from scratch and need a requirements.txt file, download the project files using the link in the code editor.
@@ -174,27 +110,9 @@ pip3 install stripe
 
 Download the stripe-python library source code directly [from GitHub](https://github.com/stripe/stripe-python).
 
-### Install the Stripe PHP library
-
-Install the library with composer and initialize with your secret API key. Alternatively, if you’re starting from scratch and need a composer.json file, download the files using the link in the code editor.
-
-#### Composer
-
-Install the library:
-
-```bash
-composer require stripe/stripe-php
-```
-
-#### GitHub
-
-Or download the stripe-php library source code directly [from GitHub](https://github.com/stripe/stripe-php).
-
 ### Set up your server
 
 Add the dependency to your build and import the library. Alternatively, if you’re starting from scratch and need a go.mod file, download the project files using the link in the code editor.
-
-#### Go
 
 Make sure to initialize with Go Modules:
 
@@ -375,7 +293,7 @@ Test your secured endpoint by using the Stripe CLI, which sends the proper signa
 // This is a public sample test API key.
 // Don’t submit any personally identifiable information in requests made with this key.
 // Sign in to see your own test API key embedded in code samples.
-const stripe = require('stripe')('<<YOUR_SECRET_KEY>>');
+const stripe = require('stripe')('[YOUR_VALUE]');
 // Replace this endpoint secret with your endpoint's unique secret
 // If you are testing with the CLI, find the secret by running 'stripe listen'
 // If you are using an endpoint defined with the API or dashboard, look in your webhook settings
@@ -482,7 +400,7 @@ require 'stripe'
 \# This is a public sample test API key.
 # Don’t submit any personally identifiable information in requests made with this key.
 # Sign in to see your own test API key embedded in code samples.
-Stripe.api_key = '<<YOUR_SECRET_KEY>>'
+Stripe.api_key = '[YOUR_VALUE]'
 \# Replace this endpoint secret with your endpoint's unique secret
 # If you are testing with the CLI, find the secret by running 'stripe listen'
 # If you are using an endpoint defined with the API or dashboard, look in your webhook settings
@@ -534,7 +452,7 @@ import stripe
 \# This is a public sample test API key.
 # Don’t submit any personally identifiable information in requests made with this key.
 # Sign in to see your own test API key embedded in code samples.
-stripe.api_key = '<<YOUR_SECRET_KEY>>'
+stripe.api_key = '[YOUR_VALUE]'
 \# Replace this endpoint secret with your endpoint's unique secret
 # If you are testing with the CLI, find the secret by running 'stripe listen'
 # If you are using an endpoint defined with the API or dashboard, look in your webhook settings
@@ -636,11 +554,11 @@ switch ($event->type) {
     error_log('Received unknown event type');
 }
 http_response_code(200);
-$stripeSecretKey = '<<YOUR_SECRET_KEY>>';
+$stripeSecretKey = '[YOUR_VALUE]';
       // This is a public sample test API key.
       // Don’t submit any personally identifiable information in requests made with this key.
       // Sign in to see your own test API key embedded in code samples.
-      services.AddSingleton(new StripeClient("<<YOUR_SECRET_KEY>>"));
+      services.AddSingleton(new StripeClient("[YOUR_VALUE]"));
   [Route("webhook")]
   [ApiController]
   public class WebhookController : Controller
@@ -679,7 +597,7 @@ $stripeSecretKey = '<<YOUR_SECRET_KEY>>';
   // This is a public sample test API key.
   // Don’t submit any personally identifiable information in requests made with this key.
   // Sign in to see your own test API key embedded in code samples.
-  stripe.Key = "<<YOUR_SECRET_KEY>>"
+  stripe.Key = "[YOUR_VALUE]"
   http.HandleFunc("/webhook", handleWebhook)
   event := stripe.Event{}
 
@@ -731,7 +649,7 @@ require github.com/stripe/stripe-go/v85 v85.0.0
         // This is a public sample test API key.
         // Don’t submit any personally identifiable information in requests made with this key.
         // Sign in to see your own test API key embedded in code samples.
-        Stripe.apiKey = "<<YOUR_SECRET_KEY>>";
+        Stripe.apiKey = "[YOUR_VALUE]";
         // Replace this endpoint secret with your endpoint's unique secret
         // If you are testing with the CLI, find the secret by running 'stripe listen'
         // If you are using an endpoint defined with the API or dashboard, look in your webhook settings
