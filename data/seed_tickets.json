@@ -49,7 +49,7 @@
     "body": "We're processing invoice.created and invoice.paid events but sometimes invoice.paid arrives before invoice.created. This causes our order system to fail.",
     "user_email": "eng@saasplatform.com",
     "expected_category": "Webhook Issues",
-    "expected_severity": "P4 - Low",
+    "expected_severity": "P2 - High",
     "expected_action": "auto_reply",
     "expected_keywords": [
       "webhook ordering",
@@ -240,7 +240,7 @@
     "body": "I created a restricted API key with read permissions on charges. When I try to list charges I get 403 Forbidden.",
     "user_email": "analyst@datacompany.com",
     "expected_category": "API Authentication",
-    "expected_severity": "P4 - Low",
+    "expected_severity": "P3 - Medium",
     "expected_action": "auto_reply",
     "expected_keywords": [
       "restricted API key",
@@ -387,7 +387,7 @@
     "user_email": "owner@newbusiness.com",
     "expected_category": "Account & Configuration",
     "expected_severity": "P2 - High",
-    "expected_action": "escalate",
+    "expected_action": "auto_reply",
     "expected_keywords": [
       "account restricted",
       "verification",
