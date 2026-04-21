@@ -85,11 +85,15 @@ async def test_needs_more_info_field(seed_tickets):
     """needs_more_info must be True for vague tickets and False for specific ones.
 
     route_node uses needs_more_info (not confidence) to determine needs_info action.
-    Vague tickets: lack identifiers/error codes needed to begin diagnosis.
-    Clear tickets: contain enough technical context to act on immediately.
-    Aligns with the 4 vague tickets asserted in test_workflow.py.
+    Vague tickets: describe a problem without identifiers or reproducible steps.
+    Clear tickets: include enough technical context to act on immediately.
+
+    Known edge case (not asserted):
+    - TICKET-008: Connect webhook configuration question with no error code — description is
+      clear enough to infer the solution, but model flags missing identifiers. False positive
+      with low severity: routes to needs_info instead of auto_reply, which is recoverable.
     """
-    vague_ids = ["TICKET-013", "TICKET-023", "TICKET-025", "TICKET-029"]
+    vague_ids = ["TICKET-007", "TICKET-013", "TICKET-023", "TICKET-025", "TICKET-029"]
     clear_ids = ["TICKET-002", "TICKET-016"]
 
     for id_ in vague_ids:

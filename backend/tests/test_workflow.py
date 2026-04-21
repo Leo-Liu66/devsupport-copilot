@@ -119,14 +119,15 @@ async def test_answer_has_citations(ticket_001: TicketInput) -> None:
 
 
 @pytest.mark.parametrize("ticket_id,expect_needs_info", [
+    ("TICKET-007", True),   # vague body: "I think we may have missed some events, can you help?"
     ("TICKET-013", True),   # "payments failing lately... something seems off" — no error code in body
     ("TICKET-023", True),   # "refund amount doesn't look right. I'm not sure" — no refund ID
     ("TICKET-025", True),   # "customer hasn't received refund yet" — no refund ID / date / amount
     ("TICKET-029", True),   # "something seems wrong with money moving" — no account context
-    # TICKET-007: known edge case — subject asks "how to replay missed events" (documentable
-    # procedure), model answers the subject rather than flagging the vague body. Prompt 2
-    # scores 4/5 here; fixing 007 causes 013 or 025 to regress. Tracked but assertion skipped.
-    ("TICKET-007", None),
+    # TICKET-008: known edge case — Connect webhook config question with no error code.
+    # Description is clear enough to infer the solution, but model flags missing identifiers.
+    # False positive: routes to needs_info instead of auto_reply (recoverable, low severity).
+    ("TICKET-008", None),
 ])
 async def test_vague_tickets_need_info(
     seed_tickets: list[dict], ticket_id: str, expect_needs_info: bool | None

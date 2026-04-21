@@ -60,13 +60,12 @@ Extract 3-5 keywords or short phrases that:
 
 Ask yourself: does resolving this ticket require investigating a specific event, transaction, or account — and if so, does the ticket provide the identifiers or technical context needed to do that investigation?
 
-Set needs_more_info to TRUE when:
-- The ticket describes a specific problem or customer situation (a particular payment, refund, webhook event, or account state) but lacks the identifiers or error details needed to investigate it specifically — e.g. no refund ID, charge ID, error code, event ID, or steps to reproduce.
-- A support engineer would have to ask at least one follow-up question before they could take any meaningful diagnostic action.
+Set needs_more_info to TRUE when the ticket itself does not contain enough information to begin diagnosing or responding:
+- The ticket describes a problem or situation but lacks the identifiers or details needed to investigate it — e.g. no error code, refund ID, charge ID, event ID, or steps to reproduce.
+- A support engineer would have to ask the user at least one follow-up question before taking any meaningful action.
 
-Set needs_more_info to FALSE when:
-- The ticket can be fully answered using general Stripe documentation or best practices, without needing to look up a specific transaction or account.
-- The ticket includes enough technical context (error messages, API responses, specific event types, reproduction steps) to begin diagnosing immediately.
+Set needs_more_info to FALSE when the ticket contains enough detail to act on immediately:
+- The problem or question is clearly stated with sufficient technical context (error messages, API responses, specific event types, reproduction steps, or a well-formed how-to question).
 
 ## OVERRIDE RULE
 
