@@ -10,7 +10,7 @@ from app.models.ticket import (
 
 CLASSIFIER_PROMPT = """You are a support ticket classifier for a SaaS product that uses Stripe for payments, webhooks, and billing.
 
-Given a support ticket (subject + body), classify it into exactly one category, one severity level, a confidence score, and a list of keywords.
+Given a support ticket (subject + body), classify it into exactly one category, one severity level, a confidence score, a list of keywords, and whether more information is needed.
 
 ## CATEGORIES (choose exactly one)
 
@@ -36,6 +36,7 @@ Given a support ticket (subject + body), classify it into exactly one category, 
 
 ## CONFIDENCE SCORING
 
+Rate how certain you are about the category and severity classification (informational only):
 - 0.9-1.0: Category and severity are unambiguous from the ticket content.
 - 0.7-0.89: Strong signal but some ambiguity (e.g., could be adjacent category).
 - 0.5-0.69: Moderate uncertainty, ticket is vague or spans multiple categories.
@@ -52,8 +53,20 @@ Extract 3-5 keywords or short phrases that:
 
 - The category value MUST be exactly one of: "Webhook Issues", "Payment Failures", "API Authentication", "Refund & Disputes", "Account & Configuration"
 - The severity value MUST be exactly one of: "P1 - Critical", "P2 - High", "P3 - Medium", "P4 - Low"
-- When the ticket body is vague or lacks detail, lean toward P3 - Medium severity and lower confidence
+- When the ticket body is vague or lacks detail, lean toward P3 - Medium severity
 - Focus on what the TICKET is about, not tangential mentions. A ticket about a webhook returning 500 is "Webhook Issues" even if it mentions payments.
+
+## NEEDS MORE INFO
+
+Ask yourself: does resolving this ticket require investigating a specific event, transaction, or account — and if so, does the ticket provide the identifiers or technical context needed to do that investigation?
+
+Set needs_more_info to TRUE when:
+- The ticket describes a specific problem or customer situation (a particular payment, refund, webhook event, or account state) but lacks the identifiers or error details needed to investigate it specifically — e.g. no refund ID, charge ID, error code, event ID, or steps to reproduce.
+- A support engineer would have to ask at least one follow-up question before they could take any meaningful diagnostic action.
+
+Set needs_more_info to FALSE when:
+- The ticket can be fully answered using general Stripe documentation or best practices, without needing to look up a specific transaction or account.
+- The ticket includes enough technical context (error messages, API responses, specific event types, reproduction steps) to begin diagnosing immediately.
 
 ## OVERRIDE RULE
 
@@ -75,7 +88,7 @@ def _validate_classification(result: TicketClassification) -> TicketClassificati
 
 async def classify_ticket(subject: str, body: str) -> TicketClassification:
     """
-    Classify a support ticket into category, severity, confidence, and keywords.
+    Classify a support ticket into category, severity, confidence, keywords, and needs_more_info.
 
     Uses LangChain ChatOpenAI with .with_structured_output(TicketClassification)
     for guaranteed Pydantic-valid responses.
@@ -85,7 +98,7 @@ async def classify_ticket(subject: str, body: str) -> TicketClassification:
         body: ticket body text
 
     Returns:
-        TicketClassification with category, severity, confidence, keywords
+        TicketClassification with category, severity, confidence, keywords, needs_more_info
 
     Raises:
         ValueError: if LLM returns category/severity not in valid lists

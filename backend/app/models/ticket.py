@@ -30,6 +30,7 @@ class TicketClassification(BaseModel):
     severity: str          # one of SEVERITY_LEVELS
     confidence: float = Field(ge=0.0, le=1.0)
     keywords: list[str]    # extracted key terms for retrieval boost
+    needs_more_info: bool = False  # True when ticket lacks enough detail to diagnose
 
 
 class SimilarTicket(BaseModel):

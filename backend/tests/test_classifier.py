@@ -66,6 +66,7 @@ async def test_all_outputs_are_valid_objects(seed_tickets):
         assert 0.0 <= result.confidence <= 1.0
         assert isinstance(result.keywords, list)
         assert len(result.keywords) >= 1
+        assert isinstance(result.needs_more_info, bool)
 
 
 async def test_keywords_are_relevant(seed_tickets):
@@ -80,13 +81,32 @@ async def test_keywords_are_relevant(seed_tickets):
     )
 
 
-async def test_vague_ticket_gets_moderate_confidence(seed_tickets):
-    """Vague/ambiguous tickets should get lower confidence (< 0.9)."""
-    ticket = next(t for t in seed_tickets if t["id"] == "TICKET-029")
-    result = await classify_ticket(ticket["subject"], ticket["body"])
-    assert result.confidence < 0.9, (
-        f"Vague ticket got unexpectedly high confidence: {result.confidence}"
-    )
+async def test_needs_more_info_field(seed_tickets):
+    """needs_more_info must be True for vague tickets and False for specific ones.
+
+    route_node uses needs_more_info (not confidence) to determine needs_info action.
+    Vague tickets: lack identifiers/error codes needed to begin diagnosis.
+    Clear tickets: contain enough technical context to act on immediately.
+    Aligns with the 4 vague tickets asserted in test_workflow.py.
+    """
+    vague_ids = ["TICKET-013", "TICKET-023", "TICKET-025", "TICKET-029"]
+    clear_ids = ["TICKET-002", "TICKET-016"]
+
+    for id_ in vague_ids:
+        ticket = next(t for t in seed_tickets if t["id"] == id_)
+        result = await classify_ticket(ticket["subject"], ticket["body"])
+        assert result.needs_more_info is True, (
+            f"{id_} ({ticket['subject'][:50]}): "
+            f"expected needs_more_info=True, got False"
+        )
+
+    for id_ in clear_ids:
+        ticket = next(t for t in seed_tickets if t["id"] == id_)
+        result = await classify_ticket(ticket["subject"], ticket["body"])
+        assert result.needs_more_info is False, (
+            f"{id_} ({ticket['subject'][:50]}): "
+            f"expected needs_more_info=False, got True"
+        )
 
 
 async def test_p4_tickets_not_escalated(seed_tickets):
