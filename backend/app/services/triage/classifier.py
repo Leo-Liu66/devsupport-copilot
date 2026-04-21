@@ -8,6 +8,13 @@ from app.models.ticket import (
     TicketClassification,
 )
 
+_llm = ChatOpenAI(
+    model=settings.llm_model,
+    api_key=settings.openai_api_key,
+    temperature=0,
+)
+_structured_llm = _llm.with_structured_output(TicketClassification)
+
 CLASSIFIER_PROMPT = """You are a support ticket classifier for a SaaS product that uses Stripe for payments, webhooks, and billing.
 
 Given a support ticket (subject + body), classify it into exactly one category, one severity level, a confidence score, a list of keywords, and whether more information is needed.
@@ -103,14 +110,7 @@ async def classify_ticket(subject: str, body: str) -> TicketClassification:
         ValueError: if LLM returns category/severity not in valid lists
                     (should not happen with structured output, but validated as safety net)
     """
-    llm = ChatOpenAI(
-        model=settings.llm_model,
-        api_key=settings.openai_api_key,
-        temperature=0,
-    )
-    structured_llm = llm.with_structured_output(TicketClassification)
-
-    result = await structured_llm.ainvoke([
+    result = await _structured_llm.ainvoke([
         SystemMessage(content=CLASSIFIER_PROMPT),
         HumanMessage(content=f"Subject: {subject}\n\nBody: {body}"),
     ])

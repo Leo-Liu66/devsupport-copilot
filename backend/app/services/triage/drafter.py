@@ -5,6 +5,12 @@ from app.config import settings
 from app.models.ticket import TicketInput, TicketClassification
 from app.models.kb import CitedAnswer
 
+_llm = ChatOpenAI(
+    model=settings.llm_model,
+    api_key=settings.openai_api_key,
+    temperature=0,
+)
+
 DRAFTER_PROMPT = """You are a professional support agent for a SaaS product that uses Stripe.
 Draft a customer-facing reply to the support ticket below.
 
@@ -145,11 +151,5 @@ async def draft_reply(
         answer_text=answer_text,
     )
 
-    llm = ChatOpenAI(
-        model=settings.llm_model,
-        api_key=settings.openai_api_key,
-        temperature=0,
-    )
-
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    response = await _llm.ainvoke([HumanMessage(content=prompt)])
     return response.content

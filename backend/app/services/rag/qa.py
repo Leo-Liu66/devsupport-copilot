@@ -6,6 +6,12 @@ from langchain_core.messages import HumanMessage
 from app.config import settings
 from app.models.kb import Citation, CitedAnswer, RetrievedChunk
 
+_llm = ChatOpenAI(
+    model=settings.llm_model,
+    api_key=settings.openai_api_key,
+    temperature=0,
+)
+
 CITED_QA_PROMPT = """You are a technical support assistant for a SaaS product using Stripe.
 Answer the user's question using ONLY the provided sources.
 
@@ -78,12 +84,7 @@ async def generate_cited_answer(
         query=query,
     )
 
-    llm = ChatOpenAI(
-        model=settings.llm_model,
-        api_key=settings.openai_api_key,
-        temperature=0,
-    )
-    response = await llm.ainvoke([HumanMessage(content=prompt)])
+    response = await _llm.ainvoke([HumanMessage(content=prompt)])
     answer_text = response.content
 
     return CitedAnswer(

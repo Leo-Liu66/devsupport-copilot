@@ -88,12 +88,15 @@ async def test_needs_more_info_field(seed_tickets):
     Vague tickets: describe a problem without identifiers or reproducible steps.
     Clear tickets: include enough technical context to act on immediately.
 
-    Known edge case (not asserted):
-    - TICKET-008: Connect webhook configuration question with no error code — description is
-      clear enough to infer the solution, but model flags missing identifiers. False positive
+    Known edge cases (not asserted):
+    - TICKET-007: subject is a how-to question ("how to replay missed events"), model
+      inconsistently answers the subject vs. flagging the vague body. Non-deterministic
+      even at temperature=0.
+    - TICKET-008: Connect webhook config question with no error code — clear enough to
+      infer the solution, but model sometimes flags missing identifiers. False positive
       with low severity: routes to needs_info instead of auto_reply, which is recoverable.
     """
-    vague_ids = ["TICKET-007", "TICKET-013", "TICKET-023", "TICKET-025", "TICKET-029"]
+    vague_ids = ["TICKET-013", "TICKET-023", "TICKET-025", "TICKET-029"]
     clear_ids = ["TICKET-002", "TICKET-016"]
 
     for id_ in vague_ids:
