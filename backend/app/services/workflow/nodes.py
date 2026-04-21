@@ -7,9 +7,6 @@ from app.services.triage.classifier import classify_ticket
 from app.services.triage.drafter import draft_reply
 from app.services.workflow.state import TicketState
 
-CONFIDENCE_THRESHOLD = 0.7
-
-
 async def classify_node(state: TicketState) -> dict:
     """Classify the ticket into category, severity, confidence, and keywords."""
     ticket = state["ticket"]
@@ -21,7 +18,7 @@ async def classify_node(state: TicketState) -> dict:
             node="classify",
             status="completed",
             duration_ms=elapsed,
-            output_summary=f"{result.severity} | {result.category} | confidence={result.confidence:.2f}",
+            output_summary=f"{result.severity} | {result.category} | needs_more_info={result.needs_more_info}",
         )
         return {"classification": result, "workflow_trace": [step]}
     except Exception as e:
@@ -91,13 +88,12 @@ async def draft_node(state: TicketState) -> dict:
 
 
 async def route_node(state: TicketState) -> dict:
-    """Determine routing action based on severity + confidence + retrieval quality."""
+    """Determine routing action based on severity + needs_more_info + retrieval quality."""
     classification = state["classification"]
     answer = state["answer"]
     t0 = time.perf_counter()
 
     severity = classification.severity
-    cls_confidence = classification.confidence
     retrieval_ok = answer.retrieval_sufficient
 
     # Rule 1: P1 always escalates
@@ -106,10 +102,10 @@ async def route_node(state: TicketState) -> dict:
     # Rule 2: KB has no relevant content — don't auto-reply with garbage
     elif not retrieval_ok:
         action = "escalate"
-    # Rule 3: Classifier uncertain — ticket is vague, ask customer for details
-    elif cls_confidence < CONFIDENCE_THRESHOLD:
+    # Rule 3: Classifier flagged ticket as too vague to diagnose
+    elif classification.needs_more_info:
         action = "needs_info"
-    # Rule 4: Default — confident classification + sufficient retrieval
+    # Rule 4: Default — sufficient detail + sufficient retrieval
     else:
         action = "auto_reply"
 
@@ -118,6 +114,6 @@ async def route_node(state: TicketState) -> dict:
         node="route",
         status="completed",
         duration_ms=elapsed,
-        output_summary=f"action={action} (severity={severity}, confidence={cls_confidence:.2f}, retrieval_ok={retrieval_ok})",
+        output_summary=f"action={action} (severity={severity}, needs_more_info={classification.needs_more_info}, retrieval_ok={retrieval_ok})",
     )
     return {"action": action, "workflow_trace": [step]}
