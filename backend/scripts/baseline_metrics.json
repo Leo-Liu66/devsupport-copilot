@@ -1,0 +1,303 @@
+{
+  "total": 31,
+  "completed": 31,
+  "category_accuracy": 1.0,
+  "p1_recall": 1.0,
+  "mean_workflow_ms": 7404.3,
+  "mean_per_node_ms": {
+    "classify": 1140.7,
+    "retrieve": 2806.7,
+    "draft": 3452.5,
+    "route": 0.0
+  },
+  "edge_case_count": 6,
+  "edge_case_ids": [
+    "TICKET-007",
+    "TICKET-008",
+    "TICKET-015",
+    "TICKET-018",
+    "TICKET-026",
+    "TICKET-028"
+  ],
+  "per_ticket": [
+    {
+      "id": "TICKET-001",
+      "expected_category": "Webhook Issues",
+      "got_category": "Webhook Issues",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 9499.8,
+      "error": null
+    },
+    {
+      "id": "TICKET-002",
+      "expected_category": "Webhook Issues",
+      "got_category": "Webhook Issues",
+      "expected_action": "escalate",
+      "got_action": "escalate",
+      "duration_ms": 9612.5,
+      "error": null
+    },
+    {
+      "id": "TICKET-003",
+      "expected_category": "Webhook Issues",
+      "got_category": "Webhook Issues",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 7709.4,
+      "error": null
+    },
+    {
+      "id": "TICKET-004",
+      "expected_category": "Webhook Issues",
+      "got_category": "Webhook Issues",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 5982.3,
+      "error": null
+    },
+    {
+      "id": "TICKET-005",
+      "expected_category": "Webhook Issues",
+      "got_category": "Webhook Issues",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 12316.6,
+      "error": null
+    },
+    {
+      "id": "TICKET-006",
+      "expected_category": "Webhook Issues",
+      "got_category": "Webhook Issues",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 7164.5,
+      "error": null
+    },
+    {
+      "id": "TICKET-007",
+      "expected_category": "Webhook Issues",
+      "got_category": "Webhook Issues",
+      "expected_action": "needs_info",
+      "got_action": "auto_reply",
+      "duration_ms": 8080.9,
+      "error": null
+    },
+    {
+      "id": "TICKET-008",
+      "expected_category": "Webhook Issues",
+      "got_category": "Webhook Issues",
+      "expected_action": "auto_reply",
+      "got_action": "needs_info",
+      "duration_ms": 8154.6,
+      "error": null
+    },
+    {
+      "id": "TICKET-009",
+      "expected_category": "Payment Failures",
+      "got_category": "Payment Failures",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 8737.0,
+      "error": null
+    },
+    {
+      "id": "TICKET-010",
+      "expected_category": "Payment Failures",
+      "got_category": "Payment Failures",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 6915.8,
+      "error": null
+    },
+    {
+      "id": "TICKET-011",
+      "expected_category": "Payment Failures",
+      "got_category": "Payment Failures",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 6236.0,
+      "error": null
+    },
+    {
+      "id": "TICKET-012",
+      "expected_category": "Payment Failures",
+      "got_category": "Payment Failures",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 6133.8,
+      "error": null
+    },
+    {
+      "id": "TICKET-013",
+      "expected_category": "Payment Failures",
+      "got_category": "Payment Failures",
+      "expected_action": "needs_info",
+      "got_action": "needs_info",
+      "duration_ms": 7134.0,
+      "error": null
+    },
+    {
+      "id": "TICKET-014",
+      "expected_category": "Payment Failures",
+      "got_category": "Payment Failures",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 6809.1,
+      "error": null
+    },
+    {
+      "id": "TICKET-015",
+      "expected_category": "Payment Failures",
+      "got_category": "Payment Failures",
+      "expected_action": "auto_reply",
+      "got_action": "escalate",
+      "duration_ms": 5948.5,
+      "error": null
+    },
+    {
+      "id": "TICKET-016",
+      "expected_category": "API Authentication",
+      "got_category": "API Authentication",
+      "expected_action": "escalate",
+      "got_action": "escalate",
+      "duration_ms": 7912.9,
+      "error": null
+    },
+    {
+      "id": "TICKET-017",
+      "expected_category": "API Authentication",
+      "got_category": "API Authentication",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 6271.0,
+      "error": null
+    },
+    {
+      "id": "TICKET-018",
+      "expected_category": "API Authentication",
+      "got_category": "API Authentication",
+      "expected_action": "auto_reply",
+      "got_action": "escalate",
+      "duration_ms": 9069.6,
+      "error": null
+    },
+    {
+      "id": "TICKET-019",
+      "expected_category": "API Authentication",
+      "got_category": "API Authentication",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 8742.9,
+      "error": null
+    },
+    {
+      "id": "TICKET-020",
+      "expected_category": "API Authentication",
+      "got_category": "API Authentication",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 9397.6,
+      "error": null
+    },
+    {
+      "id": "TICKET-021",
+      "expected_category": "Refund & Disputes",
+      "got_category": "Refund & Disputes",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 6977.2,
+      "error": null
+    },
+    {
+      "id": "TICKET-022",
+      "expected_category": "Refund & Disputes",
+      "got_category": "Refund & Disputes",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 7138.4,
+      "error": null
+    },
+    {
+      "id": "TICKET-023",
+      "expected_category": "Refund & Disputes",
+      "got_category": "Refund & Disputes",
+      "expected_action": "needs_info",
+      "got_action": "needs_info",
+      "duration_ms": 5725.7,
+      "error": null
+    },
+    {
+      "id": "TICKET-024",
+      "expected_category": "Refund & Disputes",
+      "got_category": "Refund & Disputes",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 5869.2,
+      "error": null
+    },
+    {
+      "id": "TICKET-025",
+      "expected_category": "Refund & Disputes",
+      "got_category": "Refund & Disputes",
+      "expected_action": "needs_info",
+      "got_action": "needs_info",
+      "duration_ms": 9393.5,
+      "error": null
+    },
+    {
+      "id": "TICKET-026",
+      "expected_category": "Account & Configuration",
+      "got_category": "Account & Configuration",
+      "expected_action": "auto_reply",
+      "got_action": "escalate",
+      "duration_ms": 7852.1,
+      "error": null
+    },
+    {
+      "id": "TICKET-027",
+      "expected_category": "Account & Configuration",
+      "got_category": "Account & Configuration",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 5479.6,
+      "error": null
+    },
+    {
+      "id": "TICKET-028",
+      "expected_category": "Account & Configuration",
+      "got_category": "Account & Configuration",
+      "expected_action": "auto_reply",
+      "got_action": "escalate",
+      "duration_ms": 6081.0,
+      "error": null
+    },
+    {
+      "id": "TICKET-029",
+      "expected_category": "Account & Configuration",
+      "got_category": "Account & Configuration",
+      "expected_action": "needs_info",
+      "got_action": "needs_info",
+      "duration_ms": 5901.7,
+      "error": null
+    },
+    {
+      "id": "TICKET-030",
+      "expected_category": "Account & Configuration",
+      "got_category": "Account & Configuration",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 5390.5,
+      "error": null
+    },
+    {
+      "id": "TICKET-031",
+      "expected_category": "Account & Configuration",
+      "got_category": "Account & Configuration",
+      "expected_action": "auto_reply",
+      "got_action": "auto_reply",
+      "duration_ms": 5895.7,
+      "error": null
+    }
+  ]
+}

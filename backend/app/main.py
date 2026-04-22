@@ -1,7 +1,10 @@
 import uvicorn
 from fastapi import FastAPI
 
+from app.routers import tickets
+
 app = FastAPI(title="DevSupport Copilot", version="0.1.0")
+app.include_router(tickets.router)
 
 
 @app.get("/health")
