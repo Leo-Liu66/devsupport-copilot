@@ -55,6 +55,7 @@ class TicketAnalysis(BaseModel):
     action: str        # "auto_reply" | "escalate" | "needs_info"
     similar_tickets: list[SimilarTicket]
     workflow_trace: list[WorkflowStep]
+    persisted_ticket_id: str | None = None
 
 
 class TicketRecord(BaseModel):

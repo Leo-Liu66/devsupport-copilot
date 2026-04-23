@@ -28,6 +28,11 @@ class TicketState(TypedDict, total=False):
     # -- route_node output --
     action: str  # "auto_reply" | "escalate" | "needs_info"
 
+    # -- investigate_node output --
+    similar_tickets: list[SimilarTicket]
+
+    # -- persist_node output --
+    persisted_ticket_id: str | None
+
     # -- accumulated across all nodes (operator.add appends each node's step) --
-    similar_tickets: list[SimilarTicket]  # always [] for Week 1
     workflow_trace: Annotated[list[WorkflowStep], operator.add]

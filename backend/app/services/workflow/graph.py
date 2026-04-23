@@ -3,26 +3,37 @@ import uuid
 from langgraph.graph import END, StateGraph
 
 from app.models.ticket import TicketAnalysis, TicketInput
-from app.services.workflow.nodes import classify_node, draft_node, retrieve_node, route_node
+from app.services.workflow.nodes import (
+    classify_node,
+    draft_node,
+    investigate_node,
+    persist_node,
+    retrieve_node,
+    route_node,
+)
 from app.services.workflow.state import TicketState
 
 workflow = StateGraph(TicketState)
 workflow.add_node("classify", classify_node)
 workflow.add_node("retrieve", retrieve_node)
+workflow.add_node("investigate", investigate_node)
 workflow.add_node("draft", draft_node)
 workflow.add_node("route", route_node)
+workflow.add_node("persist", persist_node)
 
-workflow.add_edge("classify", "retrieve")
-workflow.add_edge("retrieve", "draft")
-workflow.add_edge("draft", "route")
-workflow.add_edge("route", END)
 workflow.set_entry_point("classify")
+workflow.add_edge("classify", "retrieve")
+workflow.add_edge("retrieve", "investigate")
+workflow.add_edge("investigate", "draft")
+workflow.add_edge("draft", "route")
+workflow.add_edge("route", "persist")
+workflow.add_edge("persist", END)
 
 graph = workflow.compile()
 
 
 async def analyze_ticket(ticket: TicketInput) -> TicketAnalysis:
-    """Run the full classify→retrieve→draft→route workflow."""
+    """Run the full classify→retrieve→investigate→draft→route→persist workflow."""
     ticket_id = f"TICKET-{uuid.uuid4().hex[:8].upper()}"
 
     initial_state: TicketState = {
@@ -40,6 +51,7 @@ async def analyze_ticket(ticket: TicketInput) -> TicketAnalysis:
         answer=result["answer"],
         draft_reply=result["draft_reply"],
         action=result["action"],
-        similar_tickets=result["similar_tickets"],
+        similar_tickets=result.get("similar_tickets", []),
         workflow_trace=result["workflow_trace"],
+        persisted_ticket_id=result.get("persisted_ticket_id"),
     )

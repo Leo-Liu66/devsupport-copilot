@@ -1,11 +1,38 @@
 import time
+from datetime import datetime
 
-from app.models.ticket import WorkflowStep
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+
+from app.config import settings
+from app.models.ticket import SimilarTicket, WorkflowStep
 from app.services.rag.qa import generate_cited_answer
 from app.services.rag.retriever import retrieve
+from app.services.tools.kb_tools import search_similar_tickets
+from app.services.tools.ticket_tools import persist_ticket
 from app.services.triage.classifier import classify_ticket
 from app.services.triage.drafter import draft_reply
 from app.services.workflow.state import TicketState
+
+INVESTIGATE_SYSTEM = """You triage support tickets. If the ticket describes a \
+concrete technical incident, you MAY call search_similar_tickets with a focused \
+query combining the subject and key symptoms. Call AT MOST ONCE. \
+If the ticket is vague, a general how-to question, or off-topic, do NOT call \
+any tool — just respond with an empty message."""
+
+# Lazy-initialized at first use to avoid requiring OPENAI_API_KEY at import time
+_investigate_llm = None
+
+
+def _get_investigate_llm():
+    global _investigate_llm
+    if _investigate_llm is None:
+        _investigate_llm = ChatOpenAI(
+            model=settings.llm_model,
+            api_key=settings.openai_api_key,
+            temperature=0,
+        ).bind_tools([search_similar_tickets])
+    return _investigate_llm
 
 async def classify_node(state: TicketState) -> dict:
     """Classify the ticket into category, severity, confidence, and keywords."""
@@ -117,3 +144,89 @@ async def route_node(state: TicketState) -> dict:
         output_summary=f"action={action} (severity={severity}, needs_more_info={classification.needs_more_info}, retrieval_ok={retrieval_ok})",
     )
     return {"action": action, "workflow_trace": [step]}
+
+
+async def investigate_node(state: TicketState) -> dict:
+    """Agentic node: LLM decides whether to call search_similar_tickets (max 2 iterations)."""
+    import json as _json
+
+    ticket = state["ticket"]
+    t0 = time.perf_counter()
+    messages = [
+        SystemMessage(content=INVESTIGATE_SYSTEM),
+        HumanMessage(content=f"Subject: {ticket.subject}\nBody: {ticket.body}"),
+    ]
+    similar: list[SimilarTicket] = []
+    tool_calls_total = 0
+
+    try:
+        llm = _get_investigate_llm()
+        for _ in range(2):  # HARD CAP per D5
+            ai = await llm.ainvoke(messages)
+            messages.append(ai)
+            if not getattr(ai, "tool_calls", None):
+                break
+            for tc in ai.tool_calls:
+                tool_calls_total += 1
+                if tc["name"] == "search_similar_tickets":
+                    raw_results = search_similar_tickets.invoke(tc["args"])
+                    messages.append(ToolMessage(
+                        content=_json.dumps(raw_results),
+                        tool_call_id=tc["id"],
+                    ))
+                    for item in raw_results:
+                        if isinstance(item, dict):
+                            try:
+                                similar.append(SimilarTicket.model_validate(item))
+                            except Exception:
+                                pass
+        status = "completed"
+    except Exception:
+        status = "failed"
+        tool_calls_total = 0
+
+    elapsed = int((time.perf_counter() - t0) * 1000)
+    step = WorkflowStep(
+        node="investigate",
+        status=status,
+        duration_ms=elapsed,
+        output_summary=f"tool_calls={tool_calls_total} | similar_count={len(similar)}",
+    )
+    return {"similar_tickets": similar, "workflow_trace": [step]}
+
+
+async def persist_node(state: TicketState) -> dict:
+    """Deterministic persistence: always writes the ticket to Postgres. Soft-fail."""
+    from app.models.ticket import TicketRecord
+
+    t0 = time.perf_counter()
+    result_id: str | None = None
+    try:
+        record = TicketRecord(
+            id=state["ticket_id"],
+            subject=state["ticket"].subject,
+            body=state["ticket"].body,
+            user_email=state["ticket"].user_email,
+            category=state["classification"].category,
+            severity=state["classification"].severity,
+            action=state["action"],
+            status="open",
+            draft_reply=state.get("draft_reply"),
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        result_id = await persist_ticket(record)
+        step_status = "completed"
+        summary = f"persisted id={result_id}"
+    except Exception as e:
+        step_status = "failed"
+        summary = f"{type(e).__name__}: {str(e)[:80]}"
+
+    elapsed = int((time.perf_counter() - t0) * 1000)
+    step = WorkflowStep(
+        node="persist",
+        status=step_status,
+        duration_ms=elapsed,
+        output_summary=summary,
+    )
+    return {"persisted_ticket_id": result_id, "workflow_trace": [step]}

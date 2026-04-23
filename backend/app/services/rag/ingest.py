@@ -1,11 +1,12 @@
 import glob
+import json
 import re
 from pathlib import Path
 
 import frontmatter
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from app.config import settings
 from app.models.kb import IngestResult
@@ -127,3 +128,57 @@ async def ingest_documents(doc_dir: str) -> IngestResult:
         num_chunks=len(all_texts),
         collection_name=settings.chroma_collection_name,
     )
+
+
+async def ingest_historical_tickets(
+    json_path: str,
+    collection_name: str = "historical_tickets",
+) -> int:
+    """
+    Ingest seed_tickets_with_resolutions.json into a separate ChromaDB collection.
+
+    Each ticket is embedded as "subject: <subject>\\n<body>". Metadata includes
+    ticket_id, subject, category, severity, action, and resolution so that
+    search_similar_tickets can return SimilarTicket objects with resolution text.
+
+    Returns the number of tickets ingested.
+    """
+    import chromadb
+
+    tickets = json.loads(Path(json_path).read_text())
+
+    embeddings = OpenAIEmbeddings(
+        model=settings.embedding_model,
+        api_key=settings.openai_api_key,
+    )
+
+    client = chromadb.PersistentClient(path=settings.chroma_persist_dir)
+
+    # Drop and recreate for idempotency
+    try:
+        client.delete_collection(collection_name)
+    except Exception:
+        pass
+    collection = client.create_collection(collection_name)
+
+    texts = []
+    metadatas = []
+    ids = []
+
+    for ticket in tickets:
+        text = f"Subject: {ticket['subject']}\n{ticket['body']}"
+        texts.append(text)
+        metadatas.append({
+            "ticket_id": ticket["id"],
+            "subject": ticket["subject"],
+            "category": ticket.get("expected_category", ""),
+            "severity": ticket.get("expected_severity", ""),
+            "action": ticket.get("expected_action", ""),
+            "resolution": ticket.get("resolution", ""),
+        })
+        ids.append(ticket["id"])
+
+    embeddings_list = embeddings.embed_documents(texts)
+    collection.add(embeddings=embeddings_list, documents=texts, metadatas=metadatas, ids=ids)
+
+    return len(tickets)

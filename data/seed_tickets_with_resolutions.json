@@ -1,0 +1,486 @@
+[
+  {
+    "id": "TICKET-001",
+    "subject": "Webhook endpoint returns 500 after payment_intent.succeeded event",
+    "body": "Our webhook handler started throwing 500 errors for payment_intent.succeeded events. The signature verification passes but our database update fails. Events are being retried every hour. How do we handle this without losing events?",
+    "user_email": "dev@acmecorp.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "webhook",
+      "payment_intent.succeeded",
+      "500 error",
+      "retry"
+    ],
+    "resolution": "To resolve the 500 errors from your webhook handler, first ensure that your database update logic is robust and can handle potential failures gracefully. Implement error handling and logging to capture the specific reasons for the failure. You can also consider using a queue system to process events asynchronously, which allows you to acknowledge the webhook event immediately while handling the database update separately. For more details on webhook best practices, refer to the [Stripe Webhooks documentation](https://stripe.com/docs/webhooks)."
+  },
+  {
+    "id": "TICKET-002",
+    "subject": "Stripe-Signature header verification always fails in production",
+    "body": "We set up webhook signature verification using Stripe's Python library. In local development it works fine, but in production we always get SignatureVerificationError. We're using Flask and the endpoint_secret is correct.",
+    "user_email": "backend@startup.io",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P1 - Critical",
+    "expected_action": "escalate",
+    "expected_keywords": [
+      "webhook signature",
+      "SignatureVerificationError",
+      "Stripe-Signature",
+      "verification failed"
+    ],
+    "resolution": "To resolve the SignatureVerificationError in production, ensure that the webhook endpoint is receiving the exact payload sent by Stripe, as any alteration (e.g., whitespace changes) can cause verification to fail. Double-check that the `endpoint_secret` used in production matches the one provided in your Stripe Dashboard for the specific webhook. Additionally, verify that your production server's clock is synchronized, as time discrepancies can affect signature validation. For more details, refer to the [Stripe Webhooks documentation](https://stripe.com/docs/webhooks/signatures)."
+  },
+  {
+    "id": "TICKET-003",
+    "subject": "Not receiving webhook events for failed payments",
+    "body": "We subscribed to payment_intent.payment_failed events but we're not receiving them. We receive payment_intent.succeeded fine. Our endpoint URL is correct and shows as active in the Dashboard.",
+    "user_email": "payments@retailco.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "webhook events",
+      "payment_intent.payment_failed",
+      "not receiving"
+    ],
+    "resolution": "To resolve the issue of not receiving `payment_intent.payment_failed` webhook events, first, ensure that your webhook endpoint is correctly configured to handle all event types, including failures. You can test your webhook by using the Stripe CLI to send a test event: `stripe trigger payment_intent.payment_failed`. Additionally, check your server logs for any errors when processing the webhook events. For more details, refer to the [Stripe Webhooks documentation](https://stripe.com/docs/webhooks)."
+  },
+  {
+    "id": "TICKET-004",
+    "subject": "Webhook events arriving out of order causing data inconsistencies",
+    "body": "We're processing invoice.created and invoice.paid events but sometimes invoice.paid arrives before invoice.created. This causes our order system to fail.",
+    "user_email": "eng@saasplatform.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "webhook ordering",
+      "invoice.created",
+      "invoice.paid",
+      "event order"
+    ],
+    "resolution": "To resolve issues with webhook events arriving out of order, implement idempotency in your processing logic. Use the `id` field from the webhook payload to track processed events and ensure that each event is handled only once. Additionally, consider using the `created` timestamp to determine the order of events if necessary. For more details, refer to the [Stripe Webhooks documentation](https://stripe.com/docs/webhooks)."
+  },
+  {
+    "id": "TICKET-005",
+    "subject": "Duplicate webhook events being processed multiple times",
+    "body": "We're seeing the same webhook events processed 2-3 times. Our handler returns 200 but Stripe keeps resending. Average handler time is 8 seconds.",
+    "user_email": "support@techfirm.net",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "duplicate events",
+      "webhook retry",
+      "timeout",
+      "2xx response"
+    ],
+    "resolution": "To resolve duplicate webhook events, ensure that your webhook handler is idempotent, meaning it can safely process the same event multiple times without unintended side effects. Check the event ID in your handler to confirm if it has already been processed before executing any logic. Additionally, review the timeout settings and performance of your handler; if it consistently takes longer than 5 seconds, consider optimizing it or implementing asynchronous processing. For more details, refer to the Stripe documentation on [webhooks](https://stripe.com/docs/webhooks)."
+  },
+  {
+    "id": "TICKET-006",
+    "subject": "Webhook endpoint not receiving events after DNS migration",
+    "body": "After migrating our DNS, webhook endpoint stopped receiving events. Stripe Dashboard shows events as failed with TLS error.",
+    "user_email": "ops@digitalagency.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "TLS error",
+      "webhook delivery",
+      "DNS",
+      "SSL"
+    ],
+    "resolution": "To resolve the TLS error for your webhook endpoint after the DNS migration, ensure that your new DNS settings are correctly pointing to the server hosting your webhook. Verify that your SSL certificate is properly configured and valid. You can test your endpoint using the Stripe CLI or by sending a test webhook from the Stripe Dashboard. For more details on troubleshooting webhook issues, refer to the [Stripe Webhooks documentation](https://stripe.com/docs/webhooks)."
+  },
+  {
+    "id": "TICKET-007",
+    "subject": "How to replay missed webhook events from last 24 hours",
+    "body": "We had some issues with our webhooks last week and I think we may have missed some events. Can you help us figure out what we need to do?",
+    "user_email": "developer@ecomstore.com",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "webhook",
+      "missed events",
+      "replay"
+    ],
+    "resolution": "To replay missed webhook events from the last 24 hours, you can use the Stripe Dashboard. Navigate to the \"Developers\" section, then select \"Webhooks.\" Here, you can find the \"Events\" tab, where you can view and replay any missed events by clicking on the \"Replay\" button next to each event. For more detailed instructions, refer to the Stripe documentation on [replaying webhook events](https://stripe.com/docs/webhooks/replay)."
+  },
+  {
+    "id": "TICKET-008",
+    "subject": "Webhook events for Connect accounts not being received",
+    "body": "We have a Connect platform and want to receive webhook events from connected accounts but only receive events from our own account.",
+    "user_email": "platform@connectapp.io",
+    "expected_category": "Webhook Issues",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "Connect",
+      "connected accounts",
+      "webhook events"
+    ],
+    "resolution": "To resolve the issue of not receiving webhook events from connected accounts, ensure that the webhook endpoint is correctly configured to listen for events from both your platform and connected accounts. In your Stripe Dashboard, navigate to Developers > Webhooks, and verify that the endpoint URL is set up to receive events for the connected accounts. Additionally, check that the connected accounts have the appropriate event types enabled in their settings. For more details, refer to the [Stripe Connect documentation](https://stripe.com/docs/connect/webhooks)."
+  },
+  {
+    "id": "TICKET-009",
+    "subject": "Payment failing with card_declined error but test card should succeed",
+    "body": "I'm using the test card 4242424242424242 with a future expiry but getting card_declined errors. My API key is the test secret key.",
+    "user_email": "newdev@testco.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "card_declined",
+      "test card",
+      "4242",
+      "test mode"
+    ],
+    "resolution": "To resolve the card_declined error with the test card 4242424242424242, ensure that you are using the correct test secret key and that your request is properly formatted. Additionally, verify that you are not inadvertently using any live API keys or settings. For more details on testing cards and handling errors, please refer to the Stripe documentation on [Testing](https://stripe.com/docs/testing). If the issue persists, consider checking your account settings or reaching out for further assistance."
+  },
+  {
+    "id": "TICKET-010",
+    "subject": "Payments failing with insufficient_funds for valid live cards",
+    "body": "Multiple customers reporting their cards are declined with insufficient_funds even though they have available credit. This started after we updated our integration.",
+    "user_email": "cto@livestore.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "insufficient_funds",
+      "card declined",
+      "live mode"
+    ],
+    "resolution": "To resolve the issue of payments failing with the `insufficient_funds` error, first verify that the integration is correctly handling the payment method details and that the correct currency is being used. Check the logs in the Stripe Dashboard for any discrepancies in the payment requests. Additionally, ensure that the payment method is being tokenized properly and that the customer\u2019s card details are being sent accurately. For further troubleshooting, refer to the [Stripe API documentation on handling payment failures](https://stripe.com/docs/payments/payment-failure)."
+  },
+  {
+    "id": "TICKET-011",
+    "subject": "3D Secure authentication loop \u2014 customers cannot complete payment",
+    "body": "Customers in Europe are stuck in a 3D Secure authentication loop. Affects roughly 30% of EU customers.",
+    "user_email": "payments@euretailer.eu",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "3D Secure",
+      "SCA",
+      "authentication loop",
+      "European payments"
+    ],
+    "resolution": "To resolve the 3D Secure authentication loop, ensure that your integration is correctly handling the `authentication_required` status returned by the Payment Intents API. Review the implementation of the `confirmPayment` method to ensure it properly redirects customers to the 3D Secure authentication page. Additionally, check if your payment method settings in the Dashboard are configured to support 3D Secure. For more details, refer to the [Payment Intents documentation](https://stripe.com/docs/payments/payment-intents)."
+  },
+  {
+    "id": "TICKET-012",
+    "subject": "PaymentIntent stuck in requires_action state",
+    "body": "Several PaymentIntents are stuck in requires_action status for days. These are bank redirect payments. How long before these automatically expire?",
+    "user_email": "dev@subscriptionco.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "requires_action",
+      "PaymentIntent",
+      "bank redirect",
+      "expiry"
+    ],
+    "resolution": "PaymentIntents in the requires_action state for bank redirect payments typically expire after 7 days if no action is taken. To resolve this, you can either wait for the automatic expiration or manually cancel the PaymentIntent using the Stripe API. For more details, refer to the [PaymentIntents documentation](https://stripe.com/docs/payments/payment-intents)."
+  },
+  {
+    "id": "TICKET-013",
+    "subject": "do_not_honor decline code on all new card payments",
+    "body": "A lot of our payments have been failing lately. It wasn't happening before. Something seems off but I'm not sure where to start.",
+    "user_email": "merchant@boutique.store",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "payment failures",
+      "decline",
+      "do_not_honor"
+    ],
+    "resolution": "To resolve the \"do_not_honor\" decline code, first, check the payment method details and ensure that the card information is correct. Advise the customer to contact their bank for more information, as this decline is typically issued by the card issuer. You can also review the payment logs in the Stripe Dashboard for additional context on the declines. For further guidance, refer to the Stripe documentation on handling payment failures: https://stripe.com/docs/payments/payment-failures."
+  },
+  {
+    "id": "TICKET-014",
+    "subject": "Currency mismatch error when creating PaymentIntent",
+    "body": "Getting an error: The currency requested does not match the currency of the customer. We're trying to charge a customer in GBP.",
+    "user_email": "billing@globalapp.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "currency mismatch",
+      "PaymentIntent",
+      "GBP",
+      "customer currency"
+    ],
+    "resolution": "To resolve the currency mismatch error when creating a PaymentIntent, ensure that the currency specified in the PaymentIntent matches the currency of the customer's default payment method. You can check the customer's default payment method currency using the Stripe API or Dashboard. If necessary, update the customer's payment method to one that supports GBP or create a new PaymentIntent with the correct currency. For more details, refer to the [PaymentIntents API documentation](https://stripe.com/docs/api/payment_intents)."
+  },
+  {
+    "id": "TICKET-015",
+    "subject": "Payment capture failing after 7-day hold",
+    "body": "We use manual capture for hotel bookings. A customer checked in today but capture is failing. The authorization was created 8 days ago.",
+    "user_email": "reservations@hotelchain.com",
+    "expected_category": "Payment Failures",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "manual capture",
+      "authorization",
+      "capture expiry",
+      "7 days"
+    ],
+    "resolution": "To resolve the issue of payment capture failing after a 7-day hold, you will need to reauthorize the payment. Stripe authorizations expire after 7 days, so you can create a new authorization for the same amount and then capture it. Please refer to the [Stripe documentation on capturing payments](https://stripe.com/docs/payments/capture) for detailed steps on how to reauthorize and capture payments."
+  },
+  {
+    "id": "TICKET-016",
+    "subject": "Authentication error: No such API key",
+    "body": "Our integration suddenly stopped working with 'No such API key' error. The key is loaded from an environment variable. Live mode was working yesterday.",
+    "user_email": "devops@suddenbreak.com",
+    "expected_category": "API Authentication",
+    "expected_severity": "P1 - Critical",
+    "expected_action": "escalate",
+    "expected_keywords": [
+      "API key",
+      "authentication",
+      "No such API key",
+      "environment variable"
+    ],
+    "resolution": "To resolve the \"No such API key\" error, first verify that the API key being used is correct and corresponds to the live mode. Check the environment variable configuration to ensure it is set properly and that there are no typos or whitespace issues. You can refer to the API keys section in the Stripe documentation for guidance on managing your keys: https://stripe.com/docs/keys. If the issue persists, regenerate the API key in the Stripe Dashboard and update your environment variable accordingly."
+  },
+  {
+    "id": "TICKET-017",
+    "subject": "403 Forbidden when using restricted API key",
+    "body": "I created a restricted API key with read permissions on charges. When I try to list charges I get 403 Forbidden.",
+    "user_email": "analyst@datacompany.com",
+    "expected_category": "API Authentication",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "restricted API key",
+      "403 Forbidden",
+      "permissions"
+    ],
+    "resolution": "To resolve the 403 Forbidden error when using a restricted API key, ensure that the key has the appropriate permissions for the actions you are trying to perform. In this case, verify that the key has both read and list permissions for charges. You can check and modify the permissions in the Stripe Dashboard under Developers > API keys. For more details, refer to the [Stripe documentation on restricted API keys](https://stripe.com/docs/keys#restricted-api-keys)."
+  },
+  {
+    "id": "TICKET-018",
+    "subject": "API key works locally but fails in production Docker container",
+    "body": "Our Stripe API key works locally but fails in production Docker with authentication errors. The key is set as an environment variable.",
+    "user_email": "infra@containerapp.io",
+    "expected_category": "API Authentication",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "API key",
+      "Docker",
+      "environment variable",
+      "production"
+    ],
+    "resolution": "To resolve the issue of the API key working locally but failing in the production Docker container, first, ensure that the environment variable for the API key is correctly set in the Docker container. You can verify this by checking the Dockerfile or the docker-compose.yml file for the correct syntax. Additionally, confirm that the environment variable is being passed correctly to the application by using `docker exec` to inspect the running container. For more details, refer to the [Docker documentation on environment variables](https://docs.docker.com/engine/reference/run/#env)."
+  },
+  {
+    "id": "TICKET-019",
+    "subject": "How to rotate API keys without downtime",
+    "body": "We need to rotate our production API keys due to a suspected security incident. We process thousands of payments per day and cannot have downtime.",
+    "user_email": "security@bigmerchant.com",
+    "expected_category": "API Authentication",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "API key rotation",
+      "zero downtime",
+      "live mode"
+    ],
+    "resolution": "To rotate your API keys without downtime, first, generate a new set of API keys in the Stripe Dashboard under Developers > API keys. Update your application to use the new keys while keeping the old keys active. Once you confirm that the new keys are functioning correctly, you can safely disable the old keys. For detailed steps, refer to the API key management documentation: https://stripe.com/docs/keys."
+  },
+  {
+    "id": "TICKET-020",
+    "subject": "Live mode keys not working despite switching from test mode",
+    "body": "I switched from test to live mode but still getting authentication errors in my backend. I updated my publishable key but forgot the secret key.",
+    "user_email": "indie@freelancedev.com",
+    "expected_category": "API Authentication",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "live mode",
+      "test mode",
+      "publishable key",
+      "secret key"
+    ],
+    "resolution": "To resolve authentication errors when switching from test to live mode, ensure that you have updated both the publishable key and the secret key in your backend configuration. You can find your live mode keys in the Stripe Dashboard under Developers > API keys. After updating the secret key, test the integration again to confirm that the issue is resolved."
+  },
+  {
+    "id": "TICKET-021",
+    "subject": "Refund request failing \u2014 charge already disputed",
+    "body": "We're trying to refund a customer but getting: The charge you are attempting to refund has a pending dispute. Can we still refund?",
+    "user_email": "support@marketplace.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "refund",
+      "disputed charge",
+      "chargeback",
+      "pending dispute"
+    ],
+    "resolution": "Refunds cannot be processed on charges that are currently under dispute. To resolve this issue, you can either wait for the dispute to be resolved or reach out to the customer to discuss the situation. For more information on handling disputes and refunds, please refer to our documentation on [Disputes and Refunds](https://stripe.com/docs/disputes)."
+  },
+  {
+    "id": "TICKET-022",
+    "subject": "Lost dispute \u2014 what evidence should we have submitted?",
+    "body": "We lost a chargeback dispute for a $450 software subscription. Reason code was 'services not provided'. What evidence is most effective for digital goods?",
+    "user_email": "cfo@softwarevendor.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "dispute",
+      "chargeback evidence",
+      "services not provided",
+      "digital goods"
+    ],
+    "resolution": "To effectively contest a chargeback for digital goods, it's crucial to provide evidence that demonstrates the delivery of the service. This can include screenshots of the software in use, email confirmations of subscription activation, and any communication with the customer regarding the service. For more detailed guidance, refer to our documentation on [dispute evidence](https://stripe.com/docs/disputes/evidence) to ensure you include all relevant information."
+  },
+  {
+    "id": "TICKET-023",
+    "subject": "Partial refund showing as full refund in customer's bank",
+    "body": "A customer is saying their refund amount doesn't look right. I'm not sure exactly what happened on our end or how to check.",
+    "user_email": "accounting@retail.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "partial refund",
+      "refund amount",
+      "customer statement"
+    ],
+    "resolution": "To resolve this issue, first verify the refund details in the Stripe Dashboard under the \"Payments\" section. Check the refund amount and ensure it matches the transaction history. If a partial refund was issued, confirm that the customer is viewing the correct transaction in their bank statement, as it may appear differently. For further clarity, you can refer to the documentation on [Refunds](https://stripe.com/docs/refunds) to understand how they are processed and displayed."
+  },
+  {
+    "id": "TICKET-024",
+    "subject": "Dispute deadline in 2 days \u2014 how to submit evidence quickly",
+    "body": "We just noticed a dispute expiring in 2 days. We have order confirmation, delivery tracking, and email correspondence. Can we submit evidence via API?",
+    "user_email": "urgent@fastmerchant.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "dispute deadline",
+      "evidence submission",
+      "chargeback"
+    ],
+    "resolution": "To submit evidence for a dispute quickly, you can use the Stripe API to upload your evidence directly. Refer to the [Disputes API documentation](https://stripe.com/docs/api/disputes) for details on how to attach evidence such as order confirmation, delivery tracking, and email correspondence. Ensure you submit the evidence before the deadline to avoid losing the dispute."
+  },
+  {
+    "id": "TICKET-025",
+    "subject": "Refund processing time longer than expected",
+    "body": "One of our customers is asking about their refund. They say they haven't received it yet. What should I tell them?",
+    "user_email": "help@consumerapp.com",
+    "expected_category": "Refund & Disputes",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "refund",
+      "processing time",
+      "refund status",
+      "bank credit"
+    ],
+    "resolution": "Refund processing times can vary based on the customer's bank and payment method. Typically, refunds are processed within 5-10 business days, but it may take longer for some banks to reflect the refund in the customer's account. You can advise the customer to check with their bank for more specific information. For further details, refer to our documentation on [Refund Timing](https://stripe.com/docs/refunds#timing)."
+  },
+  {
+    "id": "TICKET-026",
+    "subject": "How to add a second team member with limited access",
+    "body": "I want to add a support team member who can view disputes and issue refunds but cannot access API keys or change account settings.",
+    "user_email": "admin@smallbiz.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "team member",
+      "Dashboard access",
+      "permissions",
+      "role"
+    ],
+    "resolution": "To add a second team member with limited access, navigate to the \"Team\" section in your Stripe Dashboard. Click on \"Invite team member,\" enter their email, and select the appropriate permissions. For your needs, grant them access to \"View disputes\" and \"Issue refunds\" while ensuring that \"Manage API keys\" and \"Manage account settings\" are unchecked. For detailed steps, refer to the [Stripe documentation on managing team members](https://stripe.com/docs/dashboard/team)."
+  },
+  {
+    "id": "TICKET-027",
+    "subject": "Account temporarily restricted \u2014 unable to process payments",
+    "body": "Our Stripe account shows it is restricted and payments are paused. We submitted verification documents 3 days ago but the restriction is still in place.",
+    "user_email": "owner@newbusiness.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P2 - High",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "account restricted",
+      "verification",
+      "payout paused"
+    ],
+    "resolution": "To resolve the account restriction, please ensure that all requested verification documents have been submitted correctly and meet the requirements outlined in our documentation on [Account Verification](https://stripe.com/docs/dashboard/account-verification). If you have already submitted the documents, please allow up to 7 business days for processing. If the restriction persists beyond this timeframe, contact our support team with your account details for further assistance."
+  },
+  {
+    "id": "TICKET-028",
+    "subject": "Custom statement descriptor not appearing on customer statements",
+    "body": "We configured a custom statement descriptor in the Dashboard but customers still see our legal business name. We also tried setting it on individual PaymentIntents.",
+    "user_email": "billing@brandedco.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "statement descriptor",
+      "billing statement",
+      "PaymentIntent",
+      "branding"
+    ],
+    "resolution": "To resolve the issue of the custom statement descriptor not appearing, ensure that the descriptor is set correctly in the Dashboard under \"Settings\" > \"Public information\" and that it adheres to the character limit and formatting guidelines. Additionally, confirm that the descriptor is included in the PaymentIntent creation request and that the PaymentIntent is successfully confirmed. For more details, refer to the [Stripe documentation on statement descriptors](https://stripe.com/docs/charges/custom-descriptors). If the issue persists, check with your bank to ensure they support custom descriptors."
+  },
+  {
+    "id": "TICKET-029",
+    "subject": "Payout schedule changed unexpectedly to manual",
+    "body": "Something seems wrong with how money is moving in our account. It doesn't look the same as it used to. Can you check?",
+    "user_email": "finance@cashflowco.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P3 - Medium",
+    "expected_action": "needs_info",
+    "expected_keywords": [
+      "payout schedule",
+      "automatic payout",
+      "manual payout"
+    ],
+    "resolution": "To resolve the issue of your payout schedule changing to manual, please check your account settings under the \"Payouts\" section in the Dashboard. Ensure that your payout schedule is set to your preferred frequency (daily, weekly, or monthly) and that there are no holds or verification issues affecting your account. For more details, refer to the Payouts documentation [here](https://stripe.com/docs/payouts). If the issue persists, please provide any recent changes made to your account or contact support for further assistance."
+  },
+  {
+    "id": "TICKET-030",
+    "subject": "How to enable Apple Pay and Google Pay on Checkout",
+    "body": "We want to enable Apple Pay and Google Pay for our Stripe Checkout integration. They don't appear in the checkout form despite enabling them in the Dashboard.",
+    "user_email": "mobile@appstore.dev",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "Apple Pay",
+      "Google Pay",
+      "Checkout",
+      "payment methods"
+    ],
+    "resolution": "To enable Apple Pay and Google Pay on your Stripe Checkout integration, ensure that you have configured your payment methods correctly in the Dashboard under \"Settings\" > \"Payment methods.\" Additionally, verify that your domain is added to the \"Webhooks\" section and that you are using a supported browser for testing. For detailed steps, refer to the Stripe documentation on [Accepting payments with Apple Pay and Google Pay](https://stripe.com/docs/payments/accept-a-payment#web)."
+  },
+  {
+    "id": "TICKET-031",
+    "subject": "How do I integrate Stripe with my WordPress blog?",
+    "body": "Hi, I run a personal blog on WordPress and want to accept donations. Is there a Stripe plugin for WordPress? Also do you have any recommendations for themes that work well with payment forms? Thanks",
+    "user_email": "blogger@personalsite.com",
+    "expected_category": "Account & Configuration",
+    "expected_severity": "P4 - Low",
+    "expected_action": "auto_reply",
+    "expected_keywords": [
+      "WordPress",
+      "plugin",
+      "out of scope"
+    ],
+    "resolution": "To integrate Stripe with your WordPress blog, you can use the official Stripe Payments plugin, which allows you to easily accept donations. You can find installation instructions and documentation [here](https://wordpress.org/plugins/stripe-payments/). For themes, consider using those that are compatible with WooCommerce, as they often support payment forms well; popular options include Astra and OceanWP."
+  }
+]

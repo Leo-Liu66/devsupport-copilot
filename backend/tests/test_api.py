@@ -52,9 +52,9 @@ def test_response_includes_workflow_trace(client: TestClient, ticket_001: dict) 
     )
     assert resp.status_code == 200
     trace = resp.json()["workflow_trace"]
-    assert len(trace) == 4
+    assert len(trace) == 6
     nodes = {step["node"] for step in trace}
-    assert nodes == {"classify", "retrieve", "draft", "route"}
+    assert nodes == {"classify", "retrieve", "investigate", "draft", "route", "persist"}
 
 
 # ---------------------------------------------------------------------------
