@@ -115,9 +115,9 @@ docker compose up -d postgres
 # 4. Switch to backend/ — all subsequent commands run from here
 cd backend
 
-# 5. Ingest knowledge base into ChromaDB (one-time, ~30s, ~$0.01 in embeddings)
-#    seed_tickets_with_resolutions.json is already committed — no LLM synthesis needed
-python scripts/ingest_historical_tickets.py
+# 5. Ingest knowledge base into ChromaDB (one-time)
+python scripts/ingest_stripe_docs.py          # Stripe docs → stripe_docs collection (~$0.10, ~2 min)
+python scripts/ingest_historical_tickets.py   # historical tickets → historical_tickets collection (~$0.01, ~30s)
 
 # 6. Start the API
 uvicorn app.main:app --reload
