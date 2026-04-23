@@ -102,30 +102,24 @@ curl -X POST http://localhost:8000/tickets/analyze \
 # 1. Clone and install
 git clone https://github.com/Leo-Liu66/devsupport-copilot
 cd devsupport-copilot
-python -m venv .venv && source .venv/bin/activate  # optional but recommended
+python -m venv .venv && source .venv/bin/activate
 pip install -e backend/
 
 # 2. Configure
 cp .env.example .env
 # Set OPENAI_API_KEY in .env
 
-# 3. Start Postgres
-docker compose up -d postgres
+# 3. First-time setup (starts Postgres + ingests knowledge base, ~$0.11, ~2 min)
+make setup
 
-# 4. Switch to backend/ — all subsequent commands run from here
-cd backend
-
-# 5. Ingest knowledge base into ChromaDB (one-time)
-python scripts/ingest_stripe_docs.py          # Stripe docs → stripe_docs collection (~$0.10, ~2 min)
-python scripts/ingest_historical_tickets.py   # historical tickets → historical_tickets collection (~$0.01, ~30s)
-
-# 6. Start the API
-uvicorn app.main:app --reload
+# 4. Start the server
+make dev
 ```
 
 Server starts on **http://localhost:8000**.
 
-- **Interactive docs (Swagger UI):** http://localhost:8000/docs — try the endpoint directly in the browser, no frontend needed.
+- **Interactive docs (Swagger UI):** http://localhost:8000/docs — try the endpoint directly in the browser.
+- `make setup` is one-time only. After that, `make dev` is all you need.
 - The server logs `schema ready` once on first start; subsequent restarts are idempotent.
 
 ---
