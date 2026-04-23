@@ -102,6 +102,7 @@ curl -X POST http://localhost:8000/tickets/analyze \
 # 1. Clone and install
 git clone https://github.com/Leo-Liu66/devsupport-copilot
 cd devsupport-copilot
+python -m venv .venv && source .venv/bin/activate  # optional but recommended
 pip install -e backend/
 
 # 2. Configure
@@ -126,8 +127,6 @@ Server starts on **http://localhost:8000**.
 
 - **Interactive docs (Swagger UI):** http://localhost:8000/docs — try the endpoint directly in the browser, no frontend needed.
 - The server logs `schema ready` once on first start; subsequent restarts are idempotent.
-
-> **Note:** Steps 5–6 must run from the `backend/` directory. ChromaDB resolves its data path relative to CWD — running from `backend/` keeps ingestion and the server pointing at the same `backend/chroma_db/`.
 
 ---
 

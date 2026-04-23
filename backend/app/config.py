@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_BACKEND_DIR = Path(__file__).resolve().parent.parent  # always backend/
 
 
 class Settings(BaseSettings):
@@ -15,7 +19,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://user:pass@localhost:5432/devsupport"
 
     # ChromaDB
-    chroma_persist_dir: str = "./chroma_db"
+    chroma_persist_dir: str = str(_BACKEND_DIR / "chroma_db")
     chroma_collection_name: str = "stripe_docs"
 
     # LLM settings
