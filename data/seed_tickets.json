@@ -21,7 +21,7 @@
     "user_email": "backend@startup.io",
     "expected_category": "Webhook Issues",
     "expected_severity": "P1 - Critical",
-    "expected_action": "escalate",
+    "expected_action": "needs_review",
     "expected_keywords": [
       "webhook signature",
       "SignatureVerificationError",
@@ -147,7 +147,7 @@
   },
   {
     "id": "TICKET-011",
-    "subject": "3D Secure authentication loop — customers cannot complete payment",
+    "subject": "3D Secure authentication loop \u2014 customers cannot complete payment",
     "body": "Customers in Europe are stuck in a 3D Secure authentication loop. Affects roughly 30% of EU customers.",
     "user_email": "payments@euretailer.eu",
     "expected_category": "Payment Failures",
@@ -226,7 +226,7 @@
     "user_email": "devops@suddenbreak.com",
     "expected_category": "API Authentication",
     "expected_severity": "P1 - Critical",
-    "expected_action": "escalate",
+    "expected_action": "needs_review",
     "expected_keywords": [
       "API key",
       "authentication",
@@ -294,7 +294,7 @@
   },
   {
     "id": "TICKET-021",
-    "subject": "Refund request failing — charge already disputed",
+    "subject": "Refund request failing \u2014 charge already disputed",
     "body": "We're trying to refund a customer but getting: The charge you are attempting to refund has a pending dispute. Can we still refund?",
     "user_email": "support@marketplace.com",
     "expected_category": "Refund & Disputes",
@@ -309,7 +309,7 @@
   },
   {
     "id": "TICKET-022",
-    "subject": "Lost dispute — what evidence should we have submitted?",
+    "subject": "Lost dispute \u2014 what evidence should we have submitted?",
     "body": "We lost a chargeback dispute for a $450 software subscription. Reason code was 'services not provided'. What evidence is most effective for digital goods?",
     "user_email": "cfo@softwarevendor.com",
     "expected_category": "Refund & Disputes",
@@ -338,7 +338,7 @@
   },
   {
     "id": "TICKET-024",
-    "subject": "Dispute deadline in 2 days — how to submit evidence quickly",
+    "subject": "Dispute deadline in 2 days \u2014 how to submit evidence quickly",
     "body": "We just noticed a dispute expiring in 2 days. We have order confirmation, delivery tracking, and email correspondence. Can we submit evidence via API?",
     "user_email": "urgent@fastmerchant.com",
     "expected_category": "Refund & Disputes",
@@ -382,7 +382,7 @@
   },
   {
     "id": "TICKET-027",
-    "subject": "Account temporarily restricted — unable to process payments",
+    "subject": "Account temporarily restricted \u2014 unable to process payments",
     "body": "Our Stripe account shows it is restricted and payments are paused. We submitted verification documents 3 days ago but the restriction is still in place.",
     "user_email": "owner@newbusiness.com",
     "expected_category": "Account & Configuration",
