@@ -52,10 +52,11 @@ class TicketAnalysis(BaseModel):
     classification: TicketClassification
     answer: CitedAnswer
     draft_reply: str
-    action: str        # "auto_reply" | "escalate" | "needs_info"
+    action: str        # "auto_reply" | "needs_review" | "needs_info" | "escalate"
     similar_tickets: list[SimilarTicket]
     workflow_trace: list[WorkflowStep]
     persisted_ticket_id: str | None = None
+    clarification_question: str | None = None
 
 
 class TicketRecord(BaseModel):

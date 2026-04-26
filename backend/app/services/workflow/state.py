@@ -25,8 +25,11 @@ class TicketState(TypedDict, total=False):
     # -- draft_node output --
     draft_reply: str
 
-    # -- route_node output --
-    action: str  # "auto_reply" | "escalate" | "needs_info"
+    # -- branch node output (Task 08: await_human_review | ask_clarification | escalate | draft) --
+    action: str  # "auto_reply" | "needs_review" | "needs_info" | "escalate"
+
+    # -- ask_clarification_node output (Task 08) --
+    clarification_question: str | None
 
     # -- investigate_node output --
     similar_tickets: list[SimilarTicket]

@@ -52,9 +52,14 @@ def test_response_includes_workflow_trace(client: TestClient, ticket_001: dict) 
     )
     assert resp.status_code == 200
     trace = resp.json()["workflow_trace"]
-    assert len(trace) == 6
+    assert len(trace) == 5
     nodes = {step["node"] for step in trace}
-    assert nodes == {"classify", "retrieve", "investigate", "draft", "route", "persist"}
+    fixed_nodes = {"classify", "retrieve", "investigate", "persist"}
+    assert fixed_nodes.issubset(nodes), f"Fixed nodes missing: {fixed_nodes - nodes}"
+    branch_nodes = {"draft", "await_human_review", "ask_clarification", "escalate"}
+    assert len(nodes & branch_nodes) == 1, (
+        f"Expected exactly 1 branch node, got: {nodes & branch_nodes}"
+    )
 
 
 # ---------------------------------------------------------------------------
