@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { TicketForm } from "@/components/TicketForm";
 import { AnalysisResult } from "@/components/AnalysisResult";
+import { PipelineProgress } from "@/components/PipelineProgress";
 import { analyzeTicket, ApiError } from "@/lib/api";
 import type { TicketAnalysis, TicketInput } from "@/lib/types";
 
@@ -41,6 +42,8 @@ export default function Home() {
       </header>
 
       <TicketForm onSubmit={handleSubmit} loading={loading} />
+
+      <PipelineProgress loading={loading} />
 
       {error && (
         <div
