@@ -5,17 +5,18 @@ from app.config import settings
 from app.models.kb import RetrievedChunk
 
 
-def _get_vectorstore() -> tuple[Chroma, OpenAIEmbeddings]:
-    embeddings = OpenAIEmbeddings(
-        model=settings.embedding_model,
-        api_key=settings.openai_api_key,
-    )
-    vectorstore = Chroma(
-        collection_name=settings.chroma_collection_name,
-        embedding_function=embeddings,
-        persist_directory=settings.chroma_persist_dir,
-    )
-    return vectorstore, embeddings
+# Module-level singletons — same pattern as classifier.py / drafter.py.
+# Chroma opens the SQLite file and OpenAIEmbeddings initialises the HTTP
+# connection pool once at import time, not on every retrieve() call.
+_embeddings = OpenAIEmbeddings(
+    model=settings.embedding_model,
+    api_key=settings.openai_api_key,
+)
+_vectorstore = Chroma(
+    collection_name=settings.chroma_collection_name,
+    embedding_function=_embeddings,
+    persist_directory=settings.chroma_persist_dir,
+)
 
 
 async def retrieve(
@@ -45,21 +46,29 @@ async def retrieve(
 
     Returns list of RetrievedChunk with relevance_score.
     """
-    vectorstore, _ = _get_vectorstore()
     filter_dict: dict | None = {"doc_category": doc_category} if doc_category else None
 
-    results = vectorstore.similarity_search_with_relevance_scores(
-        query, k=top_k, filter=filter_dict
+    # Fetch extra candidates so dedup doesn't shrink results below top_k.
+    results = _vectorstore.similarity_search_with_relevance_scores(
+        query, k=top_k * 2, filter=filter_dict
     )
 
-    return [
-        RetrievedChunk(
+    # Deduplicate by content: same page_content → same chunk, keep highest score.
+    seen_content: set[str] = set()
+    chunks: list[RetrievedChunk] = []
+    for doc, score in results:
+        if doc.page_content in seen_content:
+            continue
+        seen_content.add(doc.page_content)
+        chunks.append(RetrievedChunk(
             chunk_id=doc.metadata.get("chunk_id", ""),
             content=doc.page_content,
             source_url=doc.metadata.get("source_url", ""),
             source_title=doc.metadata.get("source_title", ""),
             doc_category=doc.metadata.get("doc_category", "general"),
             relevance_score=float(score),
-        )
-        for doc, score in results
-    ]
+        ))
+        if len(chunks) == top_k:
+            break
+
+    return chunks

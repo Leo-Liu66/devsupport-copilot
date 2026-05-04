@@ -1,5 +1,6 @@
 import pytest
 
+from app.config import settings
 from app.services.rag.ingest import ingest_documents
 from app.services.rag.retriever import retrieve
 from app.services.rag.qa import generate_cited_answer
@@ -18,7 +19,7 @@ async def test_ingest_creates_chunks(ingested):
     """Ingesting Stripe docs should produce chunks in ChromaDB."""
     assert ingested.num_docs >= 10
     assert ingested.num_chunks >= 50
-    assert ingested.collection_name == "stripe_docs"
+    assert ingested.collection_name == settings.chroma_collection_name
 
 
 async def test_chunks_have_complete_metadata(ingested):

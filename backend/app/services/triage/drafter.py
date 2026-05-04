@@ -18,7 +18,7 @@ Draft a customer-facing reply to the support ticket below.
 
 1. **Greeting**: Address the customer professionally (use "Hi" or "Hello", not "Dear")
 2. **Acknowledge the issue**: Briefly restate what the customer is experiencing, showing you understand their problem
-3. **Answer with citations**: Provide the technical answer. PRESERVE all [1], [2], etc. citation markers from the Answer section EXACTLY as they appear — do not remove, renumber, or add new markers
+3. **Answer with citations**: Provide the technical answer using the Answer section below as your source. Write clean prose — do NOT include [1], [2], etc. citation markers in the reply. The reply is customer-facing and markers would confuse recipients.
 4. **Next steps**: Give 1-2 concrete actionable steps the customer can take
 5. **Closing**: End with an offer to help further (e.g., "Let us know if you have any questions" or "Feel free to reach out if you need further assistance")
 
@@ -28,11 +28,9 @@ Draft a customer-facing reply to the support ticket below.
 
 ## CITATION RULES
 
-- The Answer section below contains [1], [2], etc. markers referencing specific documentation sources
-- You MUST preserve these markers in your reply exactly where they appear
-- Do NOT invent new citation markers beyond what exists in the Answer
-- Do NOT remove or renumber existing markers
-- Place the markers naturally within your sentences, keeping them attached to the relevant claim
+- The Answer section below contains [1], [2], etc. markers for internal reference only
+- Do NOT copy these markers into your reply — they are not for customers
+- Do NOT invent any citation markers
 
 ## TONE AND LENGTH
 
