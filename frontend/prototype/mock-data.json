@@ -1,0 +1,193 @@
+{
+  "auto_reply": {
+    "ticket_id": "TICKET-001",
+    "classification": {
+      "category": "Webhook Issues",
+      "severity": "P2 - High",
+      "confidence": 0.92,
+      "keywords": ["webhook", "500", "payment_intent", "key rotation", "endpoint"],
+      "needs_more_info": false
+    },
+    "answer": {
+      "answer": "When a webhook endpoint returns 500 after key rotation, the most common cause is that the `STRIPE_WEBHOOK_SECRET` environment variable still points to the old signing secret [1]. Stripe generates a new webhook signing secret when you rotate keys — you must update it in your server environment separately from your API keys [2]. To fix: go to Developers → Webhooks in the Dashboard, click your endpoint, and copy the new signing secret starting with `whsec_` [1]. After updating the env var and restarting your server, use the Stripe CLI to replay the failed events: `stripe events resend evt_xxx` [3].",
+      "citations": [
+        {
+          "marker": "[1]",
+          "chunk_id": "stripe-webhooks-overview-chunk-003",
+          "source_url": "https://stripe.com/docs/webhooks/signatures",
+          "source_title": "Webhook Signatures",
+          "excerpt": "Each webhook endpoint has its own signing secret. When you rotate API keys, the webhook signing secret (whsec_...) is NOT automatically rotated. Update it separately in your environment."
+        },
+        {
+          "marker": "[2]",
+          "chunk_id": "stripe-webhooks-overview-chunk-007",
+          "source_url": "https://stripe.com/docs/webhooks/best-practices",
+          "source_title": "Webhook Best Practices",
+          "excerpt": "Always verify the Stripe-Signature header using constructEvent() with your endpoint's current signing secret. A mismatch raises a SignatureVerificationError and your handler should return 400."
+        },
+        {
+          "marker": "[3]",
+          "chunk_id": "stripe-cli-chunk-002",
+          "source_url": "https://stripe.com/docs/stripe-cli/webhooks",
+          "source_title": "Test webhooks with the Stripe CLI",
+          "excerpt": "Use stripe events resend <event_id> to replay a specific event to your local or production endpoint. Events from the last 30 days can be replayed."
+        }
+      ],
+      "confidence": 0.88,
+      "retrieval_sufficient": true
+    },
+    "draft_reply": "Hi there,\n\nThank you for reaching out. When a webhook endpoint returns 500 after a key rotation, the issue is almost always a stale `STRIPE_WEBHOOK_SECRET` environment variable [1].\n\nHere is how to fix it:\n1. Go to **Developers → Webhooks** in the Stripe Dashboard\n2. Click your endpoint and copy the signing secret (starts with `whsec_`)\n3. Update your `STRIPE_WEBHOOK_SECRET` environment variable and restart your server [2]\n4. Replay failed events with: `stripe events resend evt_xxx` [3]\n\nLet me know if the issue persists after the update.\n\nBest regards,\nSupport",
+    "action": "auto_reply",
+    "similar_tickets": [
+      {
+        "ticket_id": "TICKET-004",
+        "subject": "Webhook signature verification failing after deploying new server",
+        "similarity_score": 0.87,
+        "resolution": "Customer had copied the signing secret from the wrong endpoint. After updating the STRIPE_WEBHOOK_SECRET to match the correct endpoint's secret the verification passed immediately."
+      },
+      {
+        "ticket_id": "TICKET-017",
+        "subject": "Stripe-Signature header mismatch on all webhook events",
+        "similarity_score": 0.82,
+        "resolution": "The issue was that the customer was reading the raw body as a string rather than a buffer, causing the HMAC to not match. Fixed by passing raw bytes to constructEvent()."
+      },
+      {
+        "ticket_id": "TICKET-023",
+        "subject": "Webhooks 500 after migrating to new server",
+        "similarity_score": 0.76,
+        "resolution": "The new server environment did not have the STRIPE_WEBHOOK_SECRET set. After adding it to .env and restarting the service, webhook delivery resumed successfully."
+      }
+    ],
+    "workflow_trace": [
+      { "node": "classify", "status": "completed", "duration_ms": 412, "output_summary": "category=Webhook Issues severity=P2 - High confidence=0.92" },
+      { "node": "retrieve", "status": "completed", "duration_ms": 287, "output_summary": "retrieved 5 chunks from stripe_docs (top score=0.91)" },
+      { "node": "investigate", "status": "completed", "duration_ms": 1834, "output_summary": "tool_calls=1 | similar_count=3" },
+      { "node": "draft", "status": "completed", "duration_ms": 3201, "output_summary": "reply=199 words | citations=[1][2][3]" },
+      { "node": "persist", "status": "completed", "duration_ms": 43, "output_summary": "persisted id=TICKET-001" }
+    ],
+    "persisted_ticket_id": "TICKET-001",
+    "clarification_question": null
+  },
+
+  "needs_review": {
+    "ticket_id": "TICKET-002",
+    "classification": {
+      "category": "Webhook Issues",
+      "severity": "P1 - Critical",
+      "confidence": 0.96,
+      "keywords": ["webhook", "500", "production", "key rotation", "Stripe-Signature"],
+      "needs_more_info": false
+    },
+    "answer": {
+      "answer": "Webhook signature failures after key rotation in production typically indicate a stale signing secret [1]. However, given the P1 severity and production impact, this ticket is being escalated for immediate human review.",
+      "citations": [
+        {
+          "marker": "[1]",
+          "chunk_id": "stripe-webhooks-overview-chunk-003",
+          "source_url": "https://stripe.com/docs/webhooks/signatures",
+          "source_title": "Webhook Signatures",
+          "excerpt": "Each webhook endpoint has its own signing secret. When you rotate API keys, the webhook signing secret (whsec_...) is NOT automatically rotated. Update it separately in your environment."
+        }
+      ],
+      "confidence": 0.84,
+      "retrieval_sufficient": true
+    },
+    "draft_reply": "This ticket has been escalated for engineering review. A human engineer will respond within 1 business hour.",
+    "action": "needs_review",
+    "similar_tickets": [
+      {
+        "ticket_id": "TICKET-001",
+        "subject": "Webhook endpoint returns 500 after payment_intent.succeeded",
+        "similarity_score": 0.91,
+        "resolution": "Updated STRIPE_WEBHOOK_SECRET after key rotation. Customer confirmed webhooks resumed delivering successfully within 5 minutes of the env var update."
+      },
+      {
+        "ticket_id": "TICKET-004",
+        "subject": "Webhook signature verification failing after deploying new server",
+        "similarity_score": 0.83,
+        "resolution": "Customer had copied the signing secret from the wrong endpoint. After updating the STRIPE_WEBHOOK_SECRET to match the correct endpoint's secret the verification passed immediately."
+      },
+      {
+        "ticket_id": "TICKET-017",
+        "subject": "Stripe-Signature header mismatch on all webhook events",
+        "similarity_score": 0.79,
+        "resolution": "The issue was that the customer was reading the raw body as a string rather than a buffer, causing the HMAC to not match. Fixed by passing raw bytes to constructEvent()."
+      }
+    ],
+    "workflow_trace": [
+      { "node": "classify", "status": "completed", "duration_ms": 388, "output_summary": "category=Webhook Issues severity=P1 - Critical confidence=0.96" },
+      { "node": "retrieve", "status": "completed", "duration_ms": 301, "output_summary": "retrieved 5 chunks from stripe_docs (top score=0.89)" },
+      { "node": "investigate", "status": "completed", "duration_ms": 1744, "output_summary": "tool_calls=1 | similar_count=3" },
+      { "node": "await_human_review", "status": "completed", "duration_ms": 1, "output_summary": "P1 review pending | similar_count=3" },
+      { "node": "persist", "status": "completed", "duration_ms": 38, "output_summary": "persisted id=TICKET-002" }
+    ],
+    "persisted_ticket_id": "TICKET-002",
+    "clarification_question": null
+  },
+
+  "needs_info": {
+    "ticket_id": "TICKET-013",
+    "classification": {
+      "category": "Payment Failures",
+      "severity": "P3 - Medium",
+      "confidence": 0.71,
+      "keywords": ["do_not_honor", "decline", "card payments"],
+      "needs_more_info": true
+    },
+    "answer": {
+      "answer": "The `do_not_honor` decline code is issued by the card issuer when the transaction is refused for an unspecified reason [1]. More detail is needed to diagnose this accurately.",
+      "citations": [
+        {
+          "marker": "[1]",
+          "chunk_id": "stripe-payments-declines-chunk-004",
+          "source_url": "https://stripe.com/docs/declines/codes",
+          "source_title": "Decline Codes",
+          "excerpt": "do_not_honor: The card has been declined for an unknown reason. The customer should contact their card issuer for more information."
+        }
+      ],
+      "confidence": 0.54,
+      "retrieval_sufficient": false
+    },
+    "draft_reply": "Could you share the specific error message or transaction ID you're seeing?",
+    "action": "needs_info",
+    "similar_tickets": [],
+    "workflow_trace": [
+      { "node": "classify", "status": "completed", "duration_ms": 401, "output_summary": "category=Payment Failures severity=P3 - Medium confidence=0.71 needs_more_info=true" },
+      { "node": "retrieve", "status": "completed", "duration_ms": 265, "output_summary": "retrieved 3 chunks from stripe_docs (top score=0.61)" },
+      { "node": "investigate", "status": "completed", "duration_ms": 943, "output_summary": "tool_calls=0 | similar_count=0" },
+      { "node": "ask_clarification", "status": "completed", "duration_ms": 1287, "output_summary": "9 words" },
+      { "node": "persist", "status": "completed", "duration_ms": 41, "output_summary": "persisted id=TICKET-013" }
+    ],
+    "persisted_ticket_id": "TICKET-013",
+    "clarification_question": "Could you share the specific error message or transaction ID you're seeing?"
+  },
+
+  "escalate": {
+    "ticket_id": "TICKET-SYN-001",
+    "classification": {
+      "category": "Account & Configuration",
+      "severity": "P4 - Low",
+      "confidence": 0.34,
+      "keywords": ["sourdough", "recipe", "baking"],
+      "needs_more_info": false
+    },
+    "answer": {
+      "answer": "The provided query does not relate to Stripe or payment processing. No relevant documentation was found.",
+      "citations": [],
+      "confidence": 0.12,
+      "retrieval_sufficient": false
+    },
+    "draft_reply": "Thank you for reaching out. An engineer will review this ticket and reply directly.",
+    "action": "escalate",
+    "similar_tickets": [],
+    "workflow_trace": [
+      { "node": "classify", "status": "completed", "duration_ms": 356, "output_summary": "category=Account & Configuration severity=P4 - Low confidence=0.34" },
+      { "node": "retrieve", "status": "completed", "duration_ms": 198, "output_summary": "retrieved 2 chunks from stripe_docs (top score=0.21)" },
+      { "node": "investigate", "status": "completed", "duration_ms": 812, "output_summary": "tool_calls=0 | similar_count=0" },
+      { "node": "escalate", "status": "completed", "duration_ms": 1, "output_summary": "low retrieval (conf=0.12)" },
+      { "node": "persist", "status": "completed", "duration_ms": 35, "output_summary": "persisted id=TICKET-SYN-001" }
+    ],
+    "persisted_ticket_id": "TICKET-SYN-001",
+    "clarification_question": null
+  }
+}

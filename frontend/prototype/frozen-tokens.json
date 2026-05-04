@@ -1,0 +1,12 @@
+{
+  "space":            { "base": 8, "cardPadding": 24 },
+  "fontSize":         { "base": 14, "heading": 22 },
+  "lineHeight":       { "body": 1.5 },
+  "radius":           { "card": 12 },
+  "shadow":           { "card": 1 },
+  "severity":         { "p1Hue": 0, "p2Hue": 30, "p3Hue": 210, "p4Hue": 130, "saturation": 60 },
+  "citation":         { "popoverDelay": 150, "popoverWidth": 320 },
+  "timeline":         { "nodeRadius": 8, "lineThickness": 2, "stepGap": 28 },
+  "spinner":          { "stroke": 3 },
+  "transitionMs":     200
+}

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DevSupport Copilot — Design Prototype</title>
+<style>
+  /* ─── CSS Design Tokens (overridden by sliders) ─────────────────────── */
+  :root {
+    --space-base: 8px;
+    --space-card-padding: 24px;
+    --font-size-base: 14px;
+    --font-size-heading: 22px;
+    --line-height-body: 1.5;
+    --radius-card: 12px;
+    --shadow-card: 1;
+    --severity-p1-hue: 0;
+    --severity-p2-hue: 30;
+    --severity-p3-hue: 210;
+    --severity-p4-hue: 130;
+    --chip-saturation: 60%;
+    --citation-popover-delay: 150ms;
+    --citation-popover-width: 320px;
+    --timeline-node-radius: 8px;
+    --timeline-line-thickness: 2px;
+    --timeline-step-gap: 28px;
+    --spinner-stroke: 3px;
+    --transition-duration: 200ms;
+
+    /* derived */
+    --shadow-0: none;
+    --shadow-1: 0 1px 3px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-2: 0 4px 6px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
+    --shadow-3: 0 10px 15px rgba(0,0,0,.10), 0 4px 6px rgba(0,0,0,.05);
+  }
+
+  /* ─── Base Reset ────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-body);
+    background: #f8f9fa;
+    color: #1a1a2e;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ─── Layout ────────────────────────────────────────────────────────── */
+  #main-content {
+    flex: 1;
+    padding: 32px;
+    max-width: calc(100vw - 340px);
+    overflow-y: auto;
+  }
+  #control-panel {
+    width: 320px;
+    flex-shrink: 0;
+    background: #fff;
+    border-left: 1px solid #e2e8f0;
+    padding: 16px;
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  /* ─── Control panel styles ──────────────────────────────────────────── */
+  #control-panel h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #64748b; margin-bottom: 12px; }
+  .cp-group { margin-bottom: 16px; }
+  .cp-group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
+  .cp-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .cp-row label { font-size: 11px; color: #475569; flex: 0 0 130px; }
+  .cp-row input[type=range] { flex: 1; accent-color: #6366f1; }
+  .cp-row .val { font-size: 11px; color: #6366f1; font-weight: 600; min-width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .variant-select-row { margin-bottom: 16px; }
+  .variant-select-row label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 6px; }
+  .variant-select-row select { width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #f8fafc; cursor: pointer; }
+
+  #btn-export {
+    width: 100%;
+    padding: 9px 0;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background var(--transition-duration);
+  }
+  #btn-export:hover { background: #4f46e5; }
+
+  /* ─── Card ──────────────────────────────────────────────────────────── */
+  .card {
+    background: #fff;
+    border-radius: var(--radius-card);
+    padding: var(--space-card-padding);
+    margin-bottom: calc(var(--space-base) * 2);
+    transition: box-shadow var(--transition-duration);
+  }
+  .card-shadow-0 { box-shadow: var(--shadow-0); border: 1px solid #e2e8f0; }
+  .card-shadow-1 { box-shadow: var(--shadow-1); }
+  .card-shadow-2 { box-shadow: var(--shadow-2); }
+  .card-shadow-3 { box-shadow: var(--shadow-3); }
+
+  .card h3 {
+    font-size: var(--font-size-heading);
+    font-weight: 700;
+    margin-bottom: calc(var(--space-base) * 1.5);
+    color: #0f172a;
+  }
+
+  /* ─── Chips ─────────────────────────────────────────────────────────── */
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: calc(var(--space-base) * 2); }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1.5px solid transparent;
+  }
+  .chip-neutral { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+  .chip-p1 { background: hsl(var(--severity-p1-hue) var(--chip-saturation) 93%); color: hsl(var(--severity-p1-hue) var(--chip-saturation) 35%); border-color: hsl(var(--severity-p1-hue) var(--chip-saturation) 75%); }
+  .chip-p2 { background: hsl(var(--severity-p2-hue) var(--chip-saturation) 93%); color: hsl(var(--severity-p2-hue) var(--chip-saturation) 35%); border-color: hsl(var(--severity-p2-hue) var(--chip-saturation) 75%); }
+  .chip-p3 { background: hsl(var(--severity-p3-hue) var(--chip-saturation) 93%); color: hsl(var(--severity-p3-hue) var(--chip-saturation) 35%); border-color: hsl(var(--severity-p3-hue) var(--chip-saturation) 75%); }
+  .chip-p4 { background: hsl(var(--severity-p4-hue) var(--chip-saturation) 93%); color: hsl(var(--severity-p4-hue) var(--chip-saturation) 35%); border-color: hsl(var(--severity-p4-hue) var(--chip-saturation) 75%); }
+  .chip-action-auto { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+  .chip-action-review { background: hsl(var(--severity-p1-hue) var(--chip-saturation) 93%); color: hsl(var(--severity-p1-hue) var(--chip-saturation) 30%); border-color: hsl(var(--severity-p1-hue) var(--chip-saturation) 70%); }
+  .chip-action-info { background: #eff6ff; color: #1e40af; border-color: #93c5fd; }
+  .chip-action-escalate { background: #fef9c3; color: #854d0e; border-color: #fde047; }
+
+  /* ─── Banners ───────────────────────────────────────────────────────── */
+  .banner-review {
+    background: hsl(var(--severity-p1-hue) var(--chip-saturation) 96%);
+    border: 1.5px solid hsl(var(--severity-p1-hue) var(--chip-saturation) 70%);
+    border-radius: var(--radius-card);
+    padding: var(--space-card-padding);
+    margin-bottom: calc(var(--space-base) * 2);
+  }
+  .banner-review h3 {
+    color: hsl(var(--severity-p1-hue) var(--chip-saturation) 30%);
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .banner-review .note { font-size: 13px; color: #6b7280; font-style: italic; }
+
+  .card-info {
+    background: #eff6ff;
+    border: 1.5px solid #93c5fd;
+    border-radius: var(--radius-card);
+    padding: var(--space-card-padding);
+    margin-bottom: calc(var(--space-base) * 2);
+  }
+  .card-info h3 { font-size: 15px; color: #1e40af; margin-bottom: 8px; }
+  .card-info .question { font-size: 15px; font-style: italic; color: #1e3a8a; margin-bottom: 12px; }
+
+  .card-escalate {
+    background: #fef9c3;
+    border: 1.5px solid #fde047;
+    border-radius: var(--radius-card);
+    padding: var(--space-card-padding);
+    margin-bottom: calc(var(--space-base) * 2);
+  }
+  .card-escalate h3 { font-size: 15px; color: #854d0e; margin-bottom: 8px; }
+  .card-escalate p { font-size: 14px; color: #78350f; }
+
+  /* ─── Copy button ───────────────────────────────────────────────────── */
+  .btn-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-duration);
+  }
+  .btn-copy:hover { background: #4f46e5; }
+  .btn-copy.copied { background: #059669; }
+
+  /* ─── Cited Answer ──────────────────────────────────────────────────── */
+  .cited-answer p { margin-bottom: 12px; font-size: var(--font-size-base); line-height: var(--line-height-body); }
+  .citation-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4em;
+    height: 1.4em;
+    border-radius: 50%;
+    background: #6366f1;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    vertical-align: super;
+    cursor: pointer;
+    position: relative;
+    margin: 0 1px;
+    transition: background var(--transition-duration);
+  }
+  .citation-badge:hover { background: #4f46e5; }
+
+  .citation-popover {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    /* Anchor to the right of the badge, slightly above centre — avoids left-edge clipping */
+    top: -8px;
+    left: calc(100% + 8px);
+    bottom: auto;
+    transform: translateX(4px);
+    width: var(--citation-popover-width);
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: var(--shadow-2);
+    z-index: 1000;
+    text-align: left;
+    transition: opacity var(--transition-duration) ease,
+                transform var(--transition-duration) ease,
+                visibility 0s linear var(--transition-duration);
+  }
+  /* Hover: apply configured delay */
+  .citation-badge:hover .citation-popover {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+    transition: opacity var(--transition-duration) ease var(--citation-popover-delay),
+                transform var(--transition-duration) ease var(--citation-popover-delay),
+                visibility 0s linear var(--citation-popover-delay);
+  }
+  /* Click (.open): no delay */
+  .citation-badge.open .citation-popover {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+    transition: opacity var(--transition-duration) ease,
+                transform var(--transition-duration) ease,
+                visibility 0s;
+  }
+  .citation-popover .pop-title { display: block; font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+  .citation-popover .pop-excerpt { display: block; font-size: 11px; color: #64748b; margin-bottom: 8px; line-height: 1.45; }
+  .citation-popover a { font-size: 11px; color: #6366f1; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+  .citation-popover a:hover { text-decoration: underline; }
+
+  /* ─── Draft reply ───────────────────────────────────────────────────── */
+  .draft-card h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #64748b; margin-bottom: 10px; }
+  .draft-card .draft-body { font-size: var(--font-size-base); white-space: pre-wrap; color: #1e293b; margin-bottom: 14px; background: #f8fafc; border-radius: 8px; padding: 12px 14px; border: 1px solid #e2e8f0; }
+
+  /* ─── Similar tickets ───────────────────────────────────────────────── */
+  .similar-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    color: #374151;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+    user-select: none;
+  }
+  .similar-summary::before { content: "▶"; font-size: 10px; transition: transform var(--transition-duration); }
+  details[open] .similar-summary::before { transform: rotate(90deg); }
+  .similar-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 10px;
+    background: #fafafa;
+  }
+  .similar-item .si-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+  .similar-item .si-id { font-size: 11px; font-weight: 600; color: #94a3b8; }
+  .similar-item .si-score { font-size: 11px; color: #6366f1; font-weight: 700; }
+  .similar-item .si-subject { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+  .similar-item .si-resolution { font-size: 12px; color: #64748b; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .no-similar { font-size: 13px; color: #94a3b8; padding: 8px 0; }
+
+  /* ─── Workflow trace ────────────────────────────────────────────────── */
+  .trace-list { display: flex; flex-direction: column; gap: var(--timeline-step-gap); position: relative; padding-left: 32px; margin-top: 8px; }
+  .trace-list::before {
+    content: '';
+    position: absolute;
+    left: calc(var(--timeline-node-radius) - var(--timeline-line-thickness) / 2);
+    top: var(--timeline-node-radius);
+    width: var(--timeline-line-thickness);
+    bottom: var(--timeline-node-radius);
+    background: #e2e8f0;
+  }
+  .trace-step { position: relative; display: flex; gap: 12px; align-items: flex-start; }
+  .trace-node-circle {
+    position: absolute;
+    left: calc(-1 * (32px - var(--timeline-node-radius)));
+    width: calc(var(--timeline-node-radius) * 2);
+    height: calc(var(--timeline-node-radius) * 2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    border: 2px solid #fff;
+  }
+  .trace-node-circle.completed { background: hsl(var(--severity-p4-hue) var(--chip-saturation) 50%); color: #fff; }
+  .trace-node-circle.skipped   { background: #cbd5e1; color: #fff; }
+  .trace-node-circle.failed    { background: hsl(var(--severity-p1-hue) var(--chip-saturation) 50%); color: #fff; }
+  .trace-content { padding-left: 4px; }
+  .trace-node-name { font-size: 13px; font-weight: 600; font-family: 'SFMono-Regular', Consolas, monospace; color: #1e293b; }
+  .trace-meta { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .trace-summary { font-size: 11px; color: #64748b; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* ─── Section heading ───────────────────────────────────────────────── */
+  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- ─── Main Content ────────────────────────────────────────────────────── -->
+<div id="main-content">
+  <div style="max-width:780px">
+    <h1 style="font-size:20px;font-weight:700;color:#0f172a;margin-bottom:4px">DevSupport Copilot</h1>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:24px">Design Prototype · Use the panel on the right to tune tokens, then click <strong>Export tokens</strong></p>
+    <div id="result-root"></div>
+  </div>
+</div>
+
+<!-- ─── Control Panel ───────────────────────────────────────────────────── -->
+<aside id="control-panel">
+  <h2>Design Tokens</h2>
+
+  <div class="variant-select-row">
+    <label>Mock variant</label>
+    <select id="variant-select">
+      <option value="auto_reply">auto_reply (TICKET-001)</option>
+      <option value="needs_review">needs_review (TICKET-002, P1)</option>
+      <option value="needs_info">needs_info (TICKET-013, vague)</option>
+      <option value="escalate">escalate (off-topic)</option>
+    </select>
+  </div>
+
+  <!-- Spacing -->
+  <div class="cp-group">
+    <div class="cp-group-title">Spacing</div>
+    <div class="cp-row">
+      <label>Base spacing</label>
+      <input type="range" id="s-space-base" min="4" max="16" step="1" value="8" />
+      <span class="val" id="v-space-base">8px</span>
+    </div>
+    <div class="cp-row">
+      <label>Card padding</label>
+      <input type="range" id="s-space-card-padding" min="12" max="48" step="2" value="24" />
+      <span class="val" id="v-space-card-padding">24px</span>
+    </div>
+  </div>
+
+  <!-- Typography -->
+  <div class="cp-group">
+    <div class="cp-group-title">Typography</div>
+    <div class="cp-row">
+      <label>Body font size</label>
+      <input type="range" id="s-font-size-base" min="12" max="18" step="1" value="14" />
+      <span class="val" id="v-font-size-base">14px</span>
+    </div>
+    <div class="cp-row">
+      <label>Heading font size</label>
+      <input type="range" id="s-font-size-heading" min="18" max="32" step="1" value="22" />
+      <span class="val" id="v-font-size-heading">22px</span>
+    </div>
+    <div class="cp-row">
+      <label>Body line height</label>
+      <input type="range" id="s-line-height-body" min="13" max="18" step="1" value="15" />
+      <span class="val" id="v-line-height-body">1.5</span>
+    </div>
+    <div class="cp-row">
+      <label>Card radius</label>
+      <input type="range" id="s-radius-card" min="0" max="24" step="1" value="12" />
+      <span class="val" id="v-radius-card">12px</span>
+    </div>
+    <div class="cp-row">
+      <label>Card shadow</label>
+      <input type="range" id="s-shadow-card" min="0" max="3" step="1" value="1" />
+      <span class="val" id="v-shadow-card">1</span>
+    </div>
+  </div>
+
+  <!-- Severity colours -->
+  <div class="cp-group">
+    <div class="cp-group-title">Severity Colours</div>
+    <div class="cp-row">
+      <label>P1 hue (red)</label>
+      <input type="range" id="s-severity-p1-hue" min="0" max="30" step="1" value="0" />
+      <span class="val" id="v-severity-p1-hue">0°</span>
+    </div>
+    <div class="cp-row">
+      <label>P2 hue (orange)</label>
+      <input type="range" id="s-severity-p2-hue" min="25" max="45" step="1" value="30" />
+      <span class="val" id="v-severity-p2-hue">30°</span>
+    </div>
+    <div class="cp-row">
+      <label>P3 hue (blue)</label>
+      <input type="range" id="s-severity-p3-hue" min="200" max="220" step="1" value="210" />
+      <span class="val" id="v-severity-p3-hue">210°</span>
+    </div>
+    <div class="cp-row">
+      <label>P4 hue (green)</label>
+      <input type="range" id="s-severity-p4-hue" min="100" max="140" step="1" value="130" />
+      <span class="val" id="v-severity-p4-hue">130°</span>
+    </div>
+    <div class="cp-row">
+      <label>Chip saturation</label>
+      <input type="range" id="s-chip-saturation" min="30" max="80" step="1" value="60" />
+      <span class="val" id="v-chip-saturation">60%</span>
+    </div>
+  </div>
+
+  <!-- Citation -->
+  <div class="cp-group">
+    <div class="cp-group-title">Citation Popover</div>
+    <div class="cp-row">
+      <label>Hover delay</label>
+      <input type="range" id="s-citation-popover-delay" min="0" max="500" step="25" value="150" />
+      <span class="val" id="v-citation-popover-delay">150ms</span>
+    </div>
+    <div class="cp-row">
+      <label>Popover width</label>
+      <input type="range" id="s-citation-popover-width" min="240" max="400" step="10" value="320" />
+      <span class="val" id="v-citation-popover-width">320px</span>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="cp-group">
+    <div class="cp-group-title">Workflow Timeline</div>
+    <div class="cp-row">
+      <label>Node radius</label>
+      <input type="range" id="s-timeline-node-radius" min="4" max="16" step="1" value="8" />
+      <span class="val" id="v-timeline-node-radius">8px</span>
+    </div>
+    <div class="cp-row">
+      <label>Line thickness</label>
+      <input type="range" id="s-timeline-line-thickness" min="1" max="4" step="1" value="2" />
+      <span class="val" id="v-timeline-line-thickness">2px</span>
+    </div>
+    <div class="cp-row">
+      <label>Step gap</label>
+      <input type="range" id="s-timeline-step-gap" min="16" max="48" step="2" value="28" />
+      <span class="val" id="v-timeline-step-gap">28px</span>
+    </div>
+  </div>
+
+  <!-- Misc -->
+  <div class="cp-group">
+    <div class="cp-group-title">Misc</div>
+    <div class="cp-row">
+      <label>Spinner stroke</label>
+      <input type="range" id="s-spinner-stroke" min="2" max="6" step="1" value="3" />
+      <span class="val" id="v-spinner-stroke">3px</span>
+    </div>
+    <div class="cp-row">
+      <label>Transition</label>
+      <input type="range" id="s-transition-duration" min="100" max="500" step="50" value="200" />
+      <span class="val" id="v-transition-duration">200ms</span>
+    </div>
+  </div>
+
+  <button id="btn-export">⬇ Export tokens</button>
+</aside>
+
+<script>
+// ─── Mock data (inlined — no fetch needed, works with file:// and http://) ──
+const MOCK = {"auto_reply":{"ticket_id":"TICKET-001","classification":{"category":"Webhook Issues","severity":"P2 - High","confidence":0.92,"keywords":["webhook","500","payment_intent","key rotation","endpoint"],"needs_more_info":false},"answer":{"answer":"When a webhook endpoint returns 500 after key rotation, the most common cause is that the `STRIPE_WEBHOOK_SECRET` environment variable still points to the old signing secret [1]. Stripe generates a new webhook signing secret when you rotate keys — you must update it in your server environment separately from your API keys [2]. To fix: go to Developers → Webhooks in the Dashboard, click your endpoint, and copy the new signing secret starting with `whsec_` [1]. After updating the env var and restarting your server, use the Stripe CLI to replay the failed events: `stripe events resend evt_xxx` [3].","citations":[{"marker":"[1]","chunk_id":"stripe-webhooks-overview-chunk-003","source_url":"https://stripe.com/docs/webhooks/signatures","source_title":"Webhook Signatures","excerpt":"Each webhook endpoint has its own signing secret. When you rotate API keys, the webhook signing secret (whsec_...) is NOT automatically rotated. Update it separately in your environment."},{"marker":"[2]","chunk_id":"stripe-webhooks-overview-chunk-007","source_url":"https://stripe.com/docs/webhooks/best-practices","source_title":"Webhook Best Practices","excerpt":"Always verify the Stripe-Signature header using constructEvent() with your endpoint's current signing secret. A mismatch raises a SignatureVerificationError and your handler should return 400."},{"marker":"[3]","chunk_id":"stripe-cli-chunk-002","source_url":"https://stripe.com/docs/stripe-cli/webhooks","source_title":"Test webhooks with the Stripe CLI","excerpt":"Use stripe events resend <event_id> to replay a specific event to your local or production endpoint. Events from the last 30 days can be replayed."}],"confidence":0.88,"retrieval_sufficient":true},"draft_reply":"Hi there,\n\nThank you for reaching out. When a webhook endpoint returns 500 after a key rotation, the issue is almost always a stale `STRIPE_WEBHOOK_SECRET` environment variable [1].\n\nHere is how to fix it:\n1. Go to **Developers → Webhooks** in the Stripe Dashboard\n2. Click your endpoint and copy the signing secret (starts with `whsec_`)\n3. Update your `STRIPE_WEBHOOK_SECRET` environment variable and restart your server [2]\n4. Replay failed events with: `stripe events resend evt_xxx` [3]\n\nLet me know if the issue persists after the update.\n\nBest regards,\nSupport","action":"auto_reply","similar_tickets":[{"ticket_id":"TICKET-004","subject":"Webhook signature verification failing after deploying new server","similarity_score":0.87,"resolution":"Customer had copied the signing secret from the wrong endpoint. After updating the STRIPE_WEBHOOK_SECRET to match the correct endpoint's secret the verification passed immediately."},{"ticket_id":"TICKET-017","subject":"Stripe-Signature header mismatch on all webhook events","similarity_score":0.82,"resolution":"The issue was that the customer was reading the raw body as a string rather than a buffer, causing the HMAC to not match. Fixed by passing raw bytes to constructEvent()."},{"ticket_id":"TICKET-023","subject":"Webhooks 500 after migrating to new server","similarity_score":0.76,"resolution":"The new server environment did not have the STRIPE_WEBHOOK_SECRET set. After adding it to .env and restarting the service, webhook delivery resumed successfully."}],"workflow_trace":[{"node":"classify","status":"completed","duration_ms":412,"output_summary":"category=Webhook Issues severity=P2 - High confidence=0.92"},{"node":"retrieve","status":"completed","duration_ms":287,"output_summary":"retrieved 5 chunks from stripe_docs (top score=0.91)"},{"node":"investigate","status":"completed","duration_ms":1834,"output_summary":"tool_calls=1 | similar_count=3"},{"node":"draft","status":"completed","duration_ms":3201,"output_summary":"reply=199 words | citations=[1][2][3]"},{"node":"persist","status":"completed","duration_ms":43,"output_summary":"persisted id=TICKET-001"}],"persisted_ticket_id":"TICKET-001","clarification_question":null},"needs_review":{"ticket_id":"TICKET-002","classification":{"category":"Webhook Issues","severity":"P1 - Critical","confidence":0.96,"keywords":["webhook","500","production","key rotation","Stripe-Signature"],"needs_more_info":false},"answer":{"answer":"Webhook signature failures after key rotation in production typically indicate a stale signing secret [1]. However, given the P1 severity and production impact, this ticket is being escalated for immediate human review.","citations":[{"marker":"[1]","chunk_id":"stripe-webhooks-overview-chunk-003","source_url":"https://stripe.com/docs/webhooks/signatures","source_title":"Webhook Signatures","excerpt":"Each webhook endpoint has its own signing secret. When you rotate API keys, the webhook signing secret (whsec_...) is NOT automatically rotated. Update it separately in your environment."}],"confidence":0.84,"retrieval_sufficient":true},"draft_reply":"This ticket has been escalated for engineering review. A human engineer will respond within 1 business hour.","action":"needs_review","similar_tickets":[{"ticket_id":"TICKET-001","subject":"Webhook endpoint returns 500 after payment_intent.succeeded","similarity_score":0.91,"resolution":"Updated STRIPE_WEBHOOK_SECRET after key rotation. Customer confirmed webhooks resumed delivering successfully within 5 minutes of the env var update."},{"ticket_id":"TICKET-004","subject":"Webhook signature verification failing after deploying new server","similarity_score":0.83,"resolution":"Customer had copied the signing secret from the wrong endpoint. After updating the STRIPE_WEBHOOK_SECRET to match the correct endpoint's secret the verification passed immediately."},{"ticket_id":"TICKET-017","subject":"Stripe-Signature header mismatch on all webhook events","similarity_score":0.79,"resolution":"The issue was that the customer was reading the raw body as a string rather than a buffer, causing the HMAC to not match. Fixed by passing raw bytes to constructEvent()."}],"workflow_trace":[{"node":"classify","status":"completed","duration_ms":388,"output_summary":"category=Webhook Issues severity=P1 - Critical confidence=0.96"},{"node":"retrieve","status":"completed","duration_ms":301,"output_summary":"retrieved 5 chunks from stripe_docs (top score=0.89)"},{"node":"investigate","status":"completed","duration_ms":1744,"output_summary":"tool_calls=1 | similar_count=3"},{"node":"await_human_review","status":"completed","duration_ms":1,"output_summary":"P1 review pending | similar_count=3"},{"node":"persist","status":"completed","duration_ms":38,"output_summary":"persisted id=TICKET-002"}],"persisted_ticket_id":"TICKET-002","clarification_question":null},"needs_info":{"ticket_id":"TICKET-013","classification":{"category":"Payment Failures","severity":"P3 - Medium","confidence":0.71,"keywords":["do_not_honor","decline","card payments"],"needs_more_info":true},"answer":{"answer":"The `do_not_honor` decline code is issued by the card issuer when the transaction is refused for an unspecified reason [1]. More detail is needed to diagnose this accurately.","citations":[{"marker":"[1]","chunk_id":"stripe-payments-declines-chunk-004","source_url":"https://stripe.com/docs/declines/codes","source_title":"Decline Codes","excerpt":"do_not_honor: The card has been declined for an unknown reason. The customer should contact their card issuer for more information."}],"confidence":0.54,"retrieval_sufficient":false},"draft_reply":"Could you share the specific error message or transaction ID you're seeing?","action":"needs_info","similar_tickets":[],"workflow_trace":[{"node":"classify","status":"completed","duration_ms":401,"output_summary":"category=Payment Failures severity=P3 - Medium confidence=0.71 needs_more_info=true"},{"node":"retrieve","status":"completed","duration_ms":265,"output_summary":"retrieved 3 chunks from stripe_docs (top score=0.61)"},{"node":"investigate","status":"completed","duration_ms":943,"output_summary":"tool_calls=0 | similar_count=0"},{"node":"ask_clarification","status":"completed","duration_ms":1287,"output_summary":"9 words"},{"node":"persist","status":"completed","duration_ms":41,"output_summary":"persisted id=TICKET-013"}],"persisted_ticket_id":"TICKET-013","clarification_question":"Could you share the specific error message or transaction ID you're seeing?"},"escalate":{"ticket_id":"TICKET-SYN-001","classification":{"category":"Account & Configuration","severity":"P4 - Low","confidence":0.34,"keywords":["sourdough","recipe","baking"],"needs_more_info":false},"answer":{"answer":"The provided query does not relate to Stripe or payment processing. No relevant documentation was found.","citations":[],"confidence":0.12,"retrieval_sufficient":false},"draft_reply":"Thank you for reaching out. An engineer will review this ticket and reply directly.","action":"escalate","similar_tickets":[],"workflow_trace":[{"node":"classify","status":"completed","duration_ms":356,"output_summary":"category=Account & Configuration severity=P4 - Low confidence=0.34"},{"node":"retrieve","status":"completed","duration_ms":198,"output_summary":"retrieved 2 chunks from stripe_docs (top score=0.21)"},{"node":"investigate","status":"completed","duration_ms":812,"output_summary":"tool_calls=0 | similar_count=0"},{"node":"escalate","status":"completed","duration_ms":1,"output_summary":"low retrieval (conf=0.12)"},{"node":"persist","status":"completed","duration_ms":35,"output_summary":"persisted id=TICKET-SYN-001"}],"persisted_ticket_id":"TICKET-SYN-001","clarification_question":null}};
+
+function loadMock() {
+  renderVariant(document.getElementById('variant-select').value);
+}
+
+// ─── Slider → CSS var wiring ─────────────────────────────────────────────
+const SLIDERS = [
+  { id: 's-space-base',               var: '--space-base',               unit: 'px', label: 'v-space-base' },
+  { id: 's-space-card-padding',       var: '--space-card-padding',       unit: 'px', label: 'v-space-card-padding' },
+  { id: 's-font-size-base',           var: '--font-size-base',           unit: 'px', label: 'v-font-size-base' },
+  { id: 's-font-size-heading',        var: '--font-size-heading',        unit: 'px', label: 'v-font-size-heading' },
+  { id: 's-line-height-body',         var: '--line-height-body',         unit: '',   label: 'v-line-height-body', transform: v => (v / 10).toFixed(1), display: v => (v / 10).toFixed(1) },
+  { id: 's-radius-card',              var: '--radius-card',              unit: 'px', label: 'v-radius-card' },
+  { id: 's-shadow-card',              var: '--shadow-card',              unit: '',   label: 'v-shadow-card' },
+  { id: 's-severity-p1-hue',         var: '--severity-p1-hue',         unit: '°',  label: 'v-severity-p1-hue' },
+  { id: 's-severity-p2-hue',         var: '--severity-p2-hue',         unit: '°',  label: 'v-severity-p2-hue' },
+  { id: 's-severity-p3-hue',         var: '--severity-p3-hue',         unit: '°',  label: 'v-severity-p3-hue' },
+  { id: 's-severity-p4-hue',         var: '--severity-p4-hue',         unit: '°',  label: 'v-severity-p4-hue' },
+  { id: 's-chip-saturation',         var: '--chip-saturation',         unit: '%',  label: 'v-chip-saturation' },
+  { id: 's-citation-popover-delay',  var: '--citation-popover-delay',  unit: 'ms', label: 'v-citation-popover-delay' },
+  { id: 's-citation-popover-width',  var: '--citation-popover-width',  unit: 'px', label: 'v-citation-popover-width' },
+  { id: 's-timeline-node-radius',    var: '--timeline-node-radius',    unit: 'px', label: 'v-timeline-node-radius' },
+  { id: 's-timeline-line-thickness', var: '--timeline-line-thickness', unit: 'px', label: 'v-timeline-line-thickness' },
+  { id: 's-timeline-step-gap',       var: '--timeline-step-gap',       unit: 'px', label: 'v-timeline-step-gap' },
+  { id: 's-spinner-stroke',          var: '--spinner-stroke',          unit: 'px', label: 'v-spinner-stroke' },
+  { id: 's-transition-duration',     var: '--transition-duration',     unit: 'ms', label: 'v-transition-duration' },
+];
+
+SLIDERS.forEach(cfg => {
+  const el = document.getElementById(cfg.id);
+  const valEl = document.getElementById(cfg.label);
+  if (!el) return;
+
+  function apply() {
+    const raw = parseFloat(el.value);
+    const cssVal = cfg.transform ? cfg.transform(raw) + cfg.unit : raw + cfg.unit;
+    document.documentElement.style.setProperty(cfg.var, cssVal);
+    valEl.textContent = cfg.display ? cfg.display(raw) + cfg.unit : raw + cfg.unit;
+  }
+
+  el.addEventListener('input', apply);
+  apply();
+});
+
+// ─── Rendering helpers ───────────────────────────────────────────────────
+
+function severityChipClass(sev) {
+  if (sev.startsWith('P1')) return 'chip-p1';
+  if (sev.startsWith('P2')) return 'chip-p2';
+  if (sev.startsWith('P3')) return 'chip-p3';
+  return 'chip-p4';
+}
+
+function actionChipClass(action) {
+  const map = { auto_reply: 'chip-action-auto', needs_review: 'chip-action-review', needs_info: 'chip-action-info', escalate: 'chip-action-escalate' };
+  return map[action] || 'chip-neutral';
+}
+
+function actionChipLabel(action) {
+  const map = { auto_reply: '✓ Auto Reply', needs_review: '⚠ Needs Review', needs_info: '? Needs Info', escalate: '↑ Escalated' };
+  return map[action] || action;
+}
+
+function renderChips(data) {
+  return `<div class="chips">
+    <span class="chip chip-neutral">${data.classification.category}</span>
+    <span class="chip ${severityChipClass(data.classification.severity)}">${data.classification.severity}</span>
+    <span class="chip ${actionChipClass(data.action)}">${actionChipLabel(data.action)}</span>
+  </div>`;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function escapeAttr(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function renderCitedAnswer(answer) {
+  const citMap = {};
+  (answer.citations || []).forEach(c => { citMap[c.marker] = c; });
+
+  const raw = answer.answer;
+  const parts = raw.split(/(\[\d+\])/g);
+  const html = parts.map(part => {
+    const m = part.match(/^\[(\d+)\]$/);
+    if (m && citMap[part]) {
+      const c = citMap[part];
+      /* span-only children — <div> inside <span> is invalid HTML and gets moved out by the parser */
+      return `<span class="citation-badge" data-marker="${m[1]}" title="Click to toggle">${m[1]}<span class="citation-popover"><span class="pop-title">${escapeHtml(c.source_title)}</span><span class="pop-excerpt">${escapeHtml(c.excerpt)}</span><a href="${escapeHtml(c.source_url)}" target="_blank" rel="noopener">↗ Open source</a></span></span>`;
+    }
+    return escapeHtml(part).replace(/\n/g, '<br>');
+  }).join('');
+
+  return `<div class="cited-answer"><p>${html}</p></div>`;
+}
+
+function renderDraftCard(draft) {
+  return `<div class="card card-shadow-${shadowTier()} draft-card">
+    <h4>Draft reply</h4>
+    <div class="draft-body">${escapeHtml(draft)}</div>
+    <button class="btn-copy" data-copy="${escapeAttr(draft)}">📋 Copy reply</button>
+  </div>`;
+}
+
+function renderSimilarTickets(tickets, expanded) {
+  const count = tickets.length;
+  const inner = count === 0
+    ? '<div class="no-similar">No similar tickets found.</div>'
+    : tickets.map(t => `
+      <div class="similar-item">
+        <div class="si-header">
+          <span class="si-id">${escapeHtml(t.ticket_id)}</span>
+          <span class="si-score">${Math.round(t.similarity_score * 100)}% match</span>
+        </div>
+        <div class="si-subject">${escapeHtml(t.subject)}</div>
+        <div class="si-resolution">${escapeHtml(t.resolution || 'No resolution recorded.')}</div>
+      </div>`).join('');
+
+  return `<div class="card card-shadow-${shadowTier()}">
+    <details ${expanded ? 'open' : ''}>
+      <summary class="similar-summary">Similar tickets (${count})</summary>
+      ${inner}
+    </details>
+  </div>`;
+}
+
+function renderTrace(trace) {
+  if (trace.length !== 5) console.warn('Unexpected trace length:', trace.length);
+  const steps = trace.map(step => {
+    const icon = step.status === 'completed' ? '✓' : step.status === 'failed' ? '✗' : '•';
+    return `<div class="trace-step">
+      <div class="trace-node-circle ${step.status}">${icon}</div>
+      <div class="trace-content">
+        <div class="trace-node-name">${escapeHtml(step.node)}</div>
+        <div class="trace-meta">${step.duration_ms != null ? step.duration_ms + ' ms' : '—'} · ${escapeHtml(step.status)}</div>
+        ${step.output_summary ? `<div class="trace-summary">${escapeHtml(step.output_summary)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="card card-shadow-${shadowTier()}">
+    <p class="section-title">Workflow trace</p>
+    <div class="trace-list">${steps}</div>
+  </div>`;
+}
+
+function shadowTier() {
+  return parseInt(document.getElementById('s-shadow-card').value) || 1;
+}
+
+// ─── Variant renderer ────────────────────────────────────────────────────
+function renderVariant(key) {
+  const data = MOCK[key];
+  const root = document.getElementById('result-root');
+  if (!data) { root.innerHTML = '<p style="color:#ef4444">Variant not found in mock-data.json</p>'; return; }
+
+  let html = '';
+  html += renderChips(data);
+
+  if (data.action === 'needs_review') {
+    html += `<div class="banner-review">
+      <h3>⚠ Awaiting Human Review</h3>
+      <div class="note">${escapeHtml(data.draft_reply)}</div>
+    </div>`;
+  } else if (data.action === 'needs_info') {
+    html += `<div class="card-info">
+      <h3>💬 Clarification Needed</h3>
+      <div class="question">"${escapeHtml(data.clarification_question)}"</div>
+      <button class="btn-copy" data-copy="${escapeAttr(data.clarification_question)}">📋 Copy question</button>
+    </div>`;
+  } else if (data.action === 'escalate') {
+    html += `<div class="card-escalate">
+      <h3>↑ Escalated</h3>
+      <p>${escapeHtml(data.draft_reply)}</p>
+    </div>`;
+  }
+
+  html += `<div class="card card-shadow-${shadowTier()}">
+    <p class="section-title">Cited answer <span style="font-weight:400;color:#94a3b8">(confidence: ${Math.round(data.answer.confidence * 100)}%)</span></p>
+    ${renderCitedAnswer(data.answer)}
+  </div>`;
+
+  if (data.action === 'auto_reply') {
+    html += renderDraftCard(data.draft_reply);
+  }
+
+  html += renderSimilarTickets(data.similar_tickets, data.action === 'needs_review');
+  html += renderTrace(data.workflow_trace);
+
+  root.innerHTML = html;
+}
+
+// ─── Citation click handler (delegated, wired once at document level) ────
+// Must be outside renderVariant to avoid duplicate listeners on variant switch.
+// Checks e.target to distinguish: click on badge circle → toggle open;
+// click inside popover → do nothing (don't close); click outside → close all.
+document.addEventListener('click', e => {
+  const badge = e.target.closest('.citation-badge');
+  if (badge) {
+    // If the click target is INSIDE the popover, don't toggle the badge
+    if (e.target.closest('.citation-popover')) return;
+    // Toggle this badge; close all others
+    const isOpen = badge.classList.contains('open');
+    document.querySelectorAll('.citation-badge.open').forEach(b => b.classList.remove('open'));
+    if (!isOpen) badge.classList.add('open');
+  } else {
+    // Click outside any badge — close all
+    document.querySelectorAll('.citation-badge.open').forEach(b => b.classList.remove('open'));
+  }
+});
+
+// ─── Copy helper (event delegation — avoids onclick attribute escaping) ──────
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn-copy');
+  if (!btn) return;
+  const text = btn.dataset.copy;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 2000);
+  });
+});
+
+// ─── Variant select ──────────────────────────────────────────────────────
+document.getElementById('variant-select').addEventListener('change', e => {
+  renderVariant(e.target.value);
+});
+
+// ─── Export tokens ───────────────────────────────────────────────────────
+document.getElementById('btn-export').addEventListener('click', () => {
+  const get = id => parseFloat(document.getElementById(id).value);
+  const tokens = {
+    space:         { base: get('s-space-base'), cardPadding: get('s-space-card-padding') },
+    fontSize:      { base: get('s-font-size-base'), heading: get('s-font-size-heading') },
+    lineHeight:    { body: parseFloat((get('s-line-height-body') / 10).toFixed(1)) },
+    radius:        { card: get('s-radius-card') },
+    shadow:        { card: get('s-shadow-card') },
+    severity:      { p1Hue: get('s-severity-p1-hue'), p2Hue: get('s-severity-p2-hue'), p3Hue: get('s-severity-p3-hue'), p4Hue: get('s-severity-p4-hue'), saturation: get('s-chip-saturation') },
+    citation:      { popoverDelay: get('s-citation-popover-delay'), popoverWidth: get('s-citation-popover-width') },
+    timeline:      { nodeRadius: get('s-timeline-node-radius'), lineThickness: get('s-timeline-line-thickness'), stepGap: get('s-timeline-step-gap') },
+    spinner:       { stroke: get('s-spinner-stroke') },
+    transitionMs:  get('s-transition-duration'),
+  };
+  const blob = new Blob([JSON.stringify(tokens, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'frozen-tokens.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// ─── Init ────────────────────────────────────────────────────────────────
+loadMock();  // sync now — no fetch needed
+</script>
+</body>
+</html>
